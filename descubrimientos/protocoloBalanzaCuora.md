@@ -1,153 +1,247 @@
 # Protocolo balanza Systel Cuora — hallazgos con el equipo real
 
-> Investigación 2026-10-23 con la balanza conectada (COM6, dirección 20, 115200 8N1, firma
-> `F2000C030000S0060P08000A060D0`). Base para la task
-> [29](../../tasks/pending/general/29_balanzaCapturaVendedorYSyncPreciosBilateral.md).
+> Base para la task [29](../../tasks/pending/general/29_balanzaCapturaVendedorYSyncPreciosBilateral.md).
 > Complementa la spec [ventas/11](../../specs/ventas/11_integracionBalanzaPuenteLocal.md).
-> **2026-10-23 (tarde):** se obtuvo el **manual oficial Systel** ("Protocolo de comunicaciones
-> CUORA MAX V6.0 Rev 06"). Confirma el protocolo deducido y **cierra los bloqueantes** que
-> antes requerían sondeo a ciegas (F4 completa, F5, F33, decimales). Lo marcado "manual" abajo
-> sale de ese documento; lo "hw" aún pide una verificación con el equipo.
+> **Regla de fuente de verdad:** manda lo **VERIFICADO en el equipo**. El manual oficial (CUORA MAX
+> V6.0 Rev 06) se usa como guía, pero donde el equipo lo contradice gana el equipo. Cada dato lleva
+> su estado: ✅ **HW** (respuesta real en un informe/lectura), 📖 **manual** (solo documentado),
+> ⚠️ **contradicho** (el equipo se comporta distinto al manual/otras docs).
+>
+> Historial: 2026-10-23 investigación inicial (COM6) · **2026-10-26 sesión en la PC del cliente
+> (COM3, FTDI 0403:6001)** que corrigió decimales, precios y descubrió F62/F63.
 
 Trama en ambos sentidos: `[dirección][función][datos ASCII][XOR]` (XOR de todos los bytes
-previos, sin terminador). Respuesta de error: datos `E<dígito>`. Escritura aceptada: `ACK`.
-El manual llama "CRC" a ese último byte; es el mismo XOR (`calcularXor`), ya verificado con F4.
+previos, sin terminador). Dirección 20 (`0x14`), 115200 8N1. Respuesta de error: datos `E<dígito>`.
+Escritura aceptada: `ACK`. El manual llama "CRC" a ese último byte; es el XOR.
 
-## Firma del equipo (función 2) — decodificada
+Códigos de error: `E3` **balanza ocupada** (ver "Estado ocupado"), `E5` formato inválido, `E6`
+registro inválido/PLU inexistente, `E7` sin datos / rango inválido.
 
-Formato: `F<tipo4>C<capacidad6>S<protocolo4>P<plus5>A<accesos3>D<decimales1>`. La real
-`F2000C030000S0060P08000A060D0` ⇒ capacidad 30000 g, **protocolo `0060` = CUORA MAX V6.0**
-(por eso aplica ese manual, y no la V6.2/V7), 8000 PLU, 60 accesos directos y **decimales `0`**
-(ver nota de decimales — contradice la lectura previa de "centavos" y hay que confirmarlo en hw).
+## Estado ocupado (E3) — afecta a TODAS las funciones ✅ HW
+
+Después de imprimir un ticket, o con un menú/ticket abierto, la balanza responde `E3` a **cualquier**
+función, incluso a las de solo lectura (F1, F28, F62, F72). Se libera al volver a la pantalla
+principal de venta (a veces hay que esperar o reiniciar la balanza). El driver debe reintentar con
+espera y exponer el estado "balanza ocupada", sin tratarlo como error fatal.
+
+## Equipo y configuración confirmados ✅ HW
+
+- Systel **Cuora MAX**, protocolo **V6.0** (firma `F2000C030000S0060P08000A060D0`), 30 kg, 8000 PLU,
+  PLU de **4 dígitos**, 60 accesos directos. Hoy hay **422 PLU** cargados.
+- **Formato de precio 6:0 (sin coma)**: F2 (`D0`) y F63 coinciden. El cliente lo configuró en
+  `Configuración > Moneda > Coma de precio`. Los precios son **pesos enteros**, hasta $999.999.
 
 ## Resumen de funciones
 
-| Func | Qué hace | Datos de la solicitud | Respuesta | Estado |
+| Func | Qué hace | Datos | Respuesta | Estado |
 |---|---|---|---|---|
-| 1 | Peso del plato | — | peso, estable, tara | ya en uso |
-| 2 | Firma del equipo | — | firma | ya en uso |
-| 28 | Fecha/hora | — | `HH:MM:SS DD/MM/AA` | ya en uso |
-| 72 | Ventas por ticket | `DDMMAA` inicio + `DDMMAA` fin | líneas `…;F` (ver abajo) | ya en uso, verificado |
-| 31 | Lista de PLU cargados | vacío | `N0001V0N0002V0…F` | lectura, verificado |
-| 3 | Leer ficha de un PLU | PLU | error | **no existe** en este equipo (manual) |
-| 4 | **Alta / modificación de PLU** | registro completo (ver abajo) | `ACK` / `E<n>` | **escribe**, registro corregido por manual |
-| 5 | **Borrar un PLU** | PLU (4 nros) | `ACK` / `E<n>` | manual, sin probar en hw |
-| 33 | **Cambio solo de precios** | PLU + versión + precio1 + precio2 | `ACK` / `E<n>` | manual (frame corregido) |
-| 42 | Decimales de precio | `0` o `2` | `ACK` | manual, config global |
-| 61 | PLU extendido (nutricional, EAN…) | registro largo | `ACK` / `E<n>` | manual, **no necesario** para la task |
+| 1 | Peso del plato | — | peso, estable, tara | ✅ HW |
+| 2 | Firma del equipo | — | firma (incluye `D`) | ✅ HW |
+| 28 | Fecha/hora | — | `HH:MM:SS DD/MM/AA` | ✅ HW |
+| 31 | Lista de PLU cargados | vacío | `N0001V0N0002V0…F` | ✅ HW |
+| **62** | **Leer un PLU completo** | PLU(4) | 159 bytes (ver abajo) | ✅ HW |
+| **63** | **Leer formato de precio/moneda** | — | `coma(1) + moneda(3)` | ✅ HW |
+| 64 | Setear coma/moneda (global) | `coma(0\|2)` + moneda(3) | `OK` | 📖 manual, **no probada** |
+| 3 | Leer ficha de un PLU | — | — | no se usa; **F62 la reemplaza** |
+| 4 | Alta/modificación completa de PLU | registro (ver abajo) | `ACK`/`E<n>` | ✅ HW (⚠️ escala el precio) |
+| **33** | **Cambio de precios (pesos enteros)** | PLU(4)+Ver(1)+P1(6)+P2(6) | `ACK`/`E7` | ✅ HW |
+| **5** | **Borrar un PLU** | PLU(4) | `ACK`/`E<n>` | ✅ HW |
+| 42 | Visualización de decimales (global) | `0`\|`2` | `ACK` | 📖 manual, no necesaria |
+| 61 | PLU extendido (nutricional, EAN…) | registro largo | `ACK`/`E<n>` | 📖 manual, no probada |
+| 72 | Ventas por ticket | `DDMMAA`+`DDMMAA` | líneas `…;F` | ✅ HW |
 
-Códigos: `E3` balanza ocupada (operador con ticket abierto; reintentar), `E5` formato de
-solicitud inválido (típicamente faltó un campo del registro), `E6` registro inválido (vacío o
-PLU no numérico), `E7` sin datos / rango inválido.
+## Precios — la regla verificada ✅ HW (⚠️ contradice docs anteriores)
 
-## F72 — datos de cada artículo del ticket
+Con la balanza en 6:0 **cada función interpreta el campo de precio distinto**:
 
-`ticket9^DD/MM/AA^HH:MM:SS^vendedor^PLU4^sector2^unid4^gramos5^drenado5^importe12`, líneas
-separadas por `;`, fin `F`. Ejemplo real:
+| Vía | `013000` se guarda/vende como | Tope | Uso |
+|---|---|---|---|
+| **F4** (campo Precio1/2) | **$130** (÷100) | $9.999,99 | **no usar para el precio real** |
+| **F33** | **$13.000** (pesos enteros) | $999.999 | **vía oficial para precios** |
+| Teclado de la balanza | pesos enteros | $999.999 | el cliente carga así |
+| **F62** (lectura) | devuelve el precio **efectivo** (`000130` tras F4, `013000` tras F33) | — | verificación |
 
-```
-000000003^23/10/26^14:52:18^01^0002^01^0000^02095^00000^000002576900
-```
+Pruebas del 2026-10-26 sobre el PLU 8000:
+- F4 `013000` → pantalla "130"; 1,025 kg vendidos dieron $133 en F72 (130 × 1,025 = 133,25).
+- F4 `999999` → la pantalla mostró "10000" ($9.999,99 redondeado).
+- F33 `013000` → pantalla 13000; 3,155 kg dieron **$41.015** en F72 (13.000 × 3,155).
+- Teclado 10000 → 3,155 kg dieron $31.550; teclado 20000/15000 → F62 devolvió `020000`/`015000`.
+- Secuencia **F4 con precio `000000` + F33 `012500`** → F62 devolvió `012500`/`012500`. ✅
 
-- **Una línea por artículo.** El vendedor carga N artículos, imprime **un solo ticket** con el
-  total, y F72 devuelve N líneas con el mismo `ticket` + `vendedor`. Verificado: ticket de 3
-  artículos → 3 líneas; la suma de importes es el total del ticket.
-- **Vendedor:** viene como lo envía la balanza, 2 dígitos (`01`, `02`, `03`). No se mapea a letras.
-- **Importe:** importe de la línea en centavos (`000002576900` → $25.769,00). Es lo cobrado
-  (precio × cantidad), **no** el precio de lista del PLU.
-- **Artículo anulado:** sigue apareciendo como línea con `unid=0`, `gramos=0`, `importe=0`.
-  Ejemplo: `…^01^0001^01^0000^00000^00000^000000000000`. Hay que descartarla o marcarla.
-- **Cuándo llega:** solo al imprimir/cerrar el ticket. Mientras un vendedor tiene un ticket
-  abierto, F72 responde `E3`.
-- **Contador de tickets:** la balanza lo reinicia (en el mismo día se vio volver a `000000001`).
-  La clave `fecha-ticket-posición` del puente lo tolera.
-- **Sin nombre de producto ni precio unitario:** F72 trae solo PLU + cantidades + importe.
-- Tras un cierre en la balanza, F72 deja de devolver los tickets anteriores.
+**Qué NO es cierto (corregido):** que "el máximo depende de la func 42", que "la firma `D0` es
+engañosa" o que "la balanza trabaja con 2 decimales". La balanza **está** en 6:0; lo que ocurre es
+que **F4 escala el campo ×1/100 independientemente del formato**. F2 y F63 son confiables.
 
-## F31 — lista de PLU
+⚠️ No probado: qué hace F33 si la balanza se pasa a 4:2 (probablemente centavos). El driver debe
+leer **F63 al conectar** y no sincronizar precios si la coma no es `0`.
 
-Sin datos devuelve todos los PLU cargados (419 en el equipo real), `N<plu4>V<d>` por cada uno.
-Con cualquier dato (`8000`, `N8000`, `08000`…) responde `E5`: **no lee un PLU puntual**.
-No trae nombre ni precio.
+## F63 — formato de precio y moneda ✅ HW
 
-## F4 — alta / modificación de PLU (escritura) — registro OFICIAL (manual, pág. 9)
+Solicitud `14 3F 2B`. Respuesta real: `14 3f 30 24 00 00 3f` → coma `0` (= 6:0) + moneda `"$"` (relleno
+con `0x00`). `0` = formato 6:0, `2` = formato 4:2. Es de solo lectura.
 
-El registro corto deducido antes estaba **incompleto**: por eso el PLU quedaba "por unidad" y no
-se podía fijar el tipo. Orden y anchos reales (PLU de 4 dígitos en este equipo):
+## F62 — leer un PLU completo ✅ HW
+
+Solicitud: `14 3E` + PLU(4 dígitos) + XOR. Respuesta de **159 bytes** (incluye `14 3E` y XOR). Offsets
+dentro del bloque de **datos** (después de `14 3E`):
+
+| Offset | Largo | Campo | Ejemplo real (PLU 0112) |
+|---|---|---|---|
+| 0 | 4 | PLU | `0112` |
+| 4 | 1 | **Gestión** (`0` balanza / `1` PC) | `0` (PLU 8000 escrito por PC: `1`) |
+| 5 | 18 | Nombre (relleno con espacios) | `PATITA LA PEQUE?A ` |
+| 23 | 6 | Precio lista 1 (pesos enteros en 6:0) | `006500` |
+| 29 | 6 | Precio lista 2 | `005000` |
+| 35 | 5 | Código de PLU | `00112` |
+| 40 | 2 | Sector | `02` |
+| 42 | 4 | Días de vencimiento | `0000` |
+| 46 | 1 | Tipo de venta (`P/U/E/C`) | `P` |
+| 47 | 4 | Tara (g) | `0000` |
+| 51 | 4 | % agua ×100 | `0000` |
+| 55 | 1 | Tabla nutricional (`S/N`) | `N` |
+| 56… | resto | tabla nutricional, origen, conservación, receta, lote, EAN, ingredientes | valores por defecto |
+
+- Devuelve **2 listas de precio** (no 5, no hay rangos): el texto de otra versión del manual que
+  habla de 5 listas y PLU de 6 dígitos **no aplica** a este firmware.
+- PLU inexistente → `E6` (si nunca estuvo cargado, ej. 8001) o `E7` (recién borrado, ej. 8000).
+  El driver debe tratar `E6`/`E7` como "no existe".
+- **Cierra el hueco** de "no se puede leer la ficha de un PLU": se puede respaldar un PLU antes de
+  reescribirlo y verificar un cambio de precio leyendo de vuelta.
+- Costo: ~0,5–1 s por PLU; leer los 422 lleva unos minutos (F31 + F62 por cada uno).
+- **Codificación del nombre ✅ HW: Latin-1 / CP1252, 1 byte por carácter.** `Ñ` = `0xD1`, `Ú` =
+  `0xDA` (el PLU 0112 de la balanza guarda `PEQUEÑA` con `d1`; escribir `PRUEBA ÑANDÚ KG` con esos
+  bytes volvió idéntico en F62). Leer/escribir con `latin1`, **no UTF-8** (la consola mostraba `?`
+  solo por la decodificación ASCII). Rellenar con espacios a 18; truncar si pasa.
+
+## F31 — lista de PLU ✅ HW
+
+Sin datos devuelve todos los PLU (422), `N<plu4>V<d>` por cada uno. Con cualquier dato responde
+`E5`: no lee un PLU puntual. No trae nombre ni precio (para eso, F62). La letra `V` es la
+**gestión**: quién modificó el PLU por última vez (✅ HW). Escrito por PC con versión `1` ⇒ `V1`;
+si después se edita por teclado en la balanza ⇒ vuelve a `V0` (y F62 muestra gestión `0`). Hoy los
+422 PLU están en `V0` salvo los que escribe el ERP. Es la señal barata de cambios (ver abajo).
+
+## Detección de cambios hechos en la balanza ✅ HW (sync balanza → sistema)
+
+No existe fecha de modificación. Pero la **gestión** cambia según quién tocó el PLU por última vez:
+- El ERP escribe siempre con **versión `1`** (en F4 y en F33) ⇒ el PLU queda `V1`.
+- Si el cliente lo edita por teclado ⇒ pasa a `V0`.
+- **Algoritmo:** una llamada a **F31** da la letra de los 422 PLU. Un PLU que el ERP dejó en `V1`
+  y ahora aparece en `V0` fue modificado en la balanza ⇒ leerlo con **F62** y traer nombre/precios
+  al sistema (y volver a marcarlo `V1` con F33 si se quiere re-tomar la gestión).
+- **Límite:** un PLU que nunca escribió el ERP está en `V0` siempre, así que sus ediciones no se
+  distinguen por la letra. Para esos hay que comparar con F62 (lectura periódica) o hacer una
+  primera "adopción" que los escriba con F33 versión `1` (sin cambiar el precio).
+- Altas y bajas hechas en la balanza se ven comparando la lista de F31 (PLU nuevos/ausentes).
+
+## F4 — alta / modificación de PLU ✅ HW
+
+Registro (PLU de 4 dígitos; ACK verificado):
 
 ```
 PLU(4) + Versión(1) + Nombre(18) + Precio1(6) + Precio2(6) + Código(5) + Sección(2) +
-DíasVto(4) + TipoVenta(1) + Tara(6) + MantenerTotales(1) + Ingredientes(1) [+ Ingredientes(100)]
+DíasVto(4) + TipoVenta(1 P/U) + Tara(6) + MantenerTotales(1 N/M) + Ingredientes(1 S/N)
 ```
 
-- **Versión de PLU** (1 letra): era el "campo1" misterioso. Indica si el PLU se gestiona desde la
-  PC o la balanza (F31 lo refleja como `0`/`1`/`2`). No son los decimales.
-- **Precio Lista 1 / 2** (6 nros c/u, "no incluye coma"): la coma la pone la balanza según su
-  config de decimales (func 42). Ver nota de decimales: el tope **no es** del protocolo.
-- **Tipo de venta** (1 letra): `P` = pesable, `U` = unitario. **Resuelve el bloqueante del tipo kg.**
-- **Tara** (6 nros, gramos): solo tiene sentido en pesables; `000000` si no aplica.
-- **Mantener Totales** (1 letra): `N` nuevo (pone acumulados en 0) / `M` modifica (conserva totales).
-  El manual exige **`N` cuando se cambia la condición unitario↔pesable**, se crea un PLU, o se
-  cambia su número/código.
-- **Ingredientes** (1 letra `S`/`N`, + 100 letras solo si `S`): no se usa en esta task → `N`.
-- Si el PLU no existe lo **crea**; si existe lo **reescribe completo** (todo campo omitido queda en 0).
+- ✅ Crea o reescribe el PLU **completo** (lo no enviado queda en 0). Probado con `P` (pesable): F62
+  confirma `P`, sector y nombre.
+- ⚠️ **El precio de F4 se divide por 100** (ver tabla). Para el driver: **mandar `000000` en
+  Precio1/2 y aplicar el precio real con F33**.
+- `MantenerTotales`: `N` pone en 0 los acumulados; el manual exige `N` al crear o al cambiar
+  unitario↔pesable. ✅ HW: `M` da ACK al modificar un PLU existente (nombre con `Ñ`/`Ú`), `N` da ACK
+  al crear de cero y al cambiar `P`↔`U`. Los totales acumulados no se pueden leer por protocolo,
+  así que la conservación con `M` no se verificó. **No reenviar F4 para cambiar solo el precio**
+  (usar F33): evita perder totales y campos que no maneja el ERP.
+- ✅ HW: **alta de un PLU nuevo** (tras F5): F4 con precio `000000` + F33 `020000/015000` ⇒ F62 lo
+  devuelve completo (gestión `1`, pesable, sector `01`, precios correctos).
+- ✅ HW: cambio `P`→`U`→`P` con `N`; el PLU unitario acepta F33 (precio `001500`).
+- Registro de F4 con `Tara` de 6 dígitos; F62 devuelve la tara en 4 (según el manual).
 
-Verificado antes con el equipo: F4 responde `ACK` y el PLU cobra exactamente el precio escrito.
-Falta reconfirmar en hw con el registro completo (tipo pesable + tara correctos).
+## F33 — cambio de precios ✅ HW
 
-## F33 — cambio solo de precios (manual, pág. 10) — por qué fallaba
+Frame: `PLU(4) + Versión(1) + Precio1(6) + Precio2(6)` = 17 bytes de datos. Verificado con PLU 8000,
+versión `1`: ACK y precio efectivo en pesos enteros. Una trama por PLU. El `E5` anterior era por
+frame mal armado (sin la versión). ⚠️ El texto que habla de PLU de 6 dígitos y **19 bytes** no aplica:
+con 17 bytes la balanza responde ACK.
 
-Frame oficial: `PLU(4) + Versión(1 letra) + Precio1(6) + Precio2(6)` (+ XOR). Cambia los precios
-manteniendo el resto del PLU y los totalizadores. El `E5` que daba antes era por **frame mal
-armado**: se mandaba `008000001500002500` (PLU de 6 dígitos y **sin el byte de versión** entre PLU
-y precios). Con el registro correcto, F33 es la vía liviana para sincronizar precios sin tocar
-tipo/tara. Mismo tope de 6 dígitos que F4 (⇒ depende de los decimales, no es un límite duro).
+**La letra de versión (✅ HW, PLU 8000 con gestión `0`):** F33 da ACK y aplica el precio con
+**cualquier** letra (`1`, `0` o `X`). La letra enviada pasa a ser la gestión del PLU: `1` ⇒ gestión
+`1` (PC), `0` ⇒ gestión `0`. **El driver debe mandar siempre `1`** (así marca los PLU del ERP, ver
+"Detección de cambios"). F33 sobre un PLU que no existe responde `E7`.
 
-## F61 — PLU extendido (manual, pág. 19-20) — disponible pero NO necesario
+## F5 — borrar un PLU ✅ HW
 
-Registro largo (nutricional, origen, lote, EAN, congelados, hasta tipos `P/U/E/C`). Los `E6/E7`
-previos eran por frame incorrecto (se probó con PLU de 8 dígitos y barridos de ceros), no por falta
-de soporte. **Para esta task no hace falta:** F4 ya trae tipo de venta y tara. Queda documentado por
-si más adelante se cargan tabla nutricional o códigos EAN por artículo.
+`PLU(4)` → `ACK`. Verificado sobre el PLU 8000: ACK ⇒ F62 y F33 responden `E7` y F31 pasa de 422 a
+421 sin el 8000. El manual dice que borra también el **acceso directo** asociado (no verificable
+por protocolo): avisar al operador. Es **irreversible**: respaldar antes con F62 y, si hace falta
+restaurar, recrear con F4 (precio `000000`) + F33. Ese ciclo borrar → recrear quedó probado.
 
-## Decimales de precio (función 42) — la clave del "tope de $9.999,99"
+## F72 — ventas por ticket ✅ HW
 
-El tope **no es del protocolo**: el campo de precio es de 6 dígitos "sin coma", y la balanza inserta
-los decimales según su config global (**func 42: `0` o `2`**, reflejada en el byte `D` de la firma).
-Con `2` decimales, 6 dígitos ⇒ máx $9.999,99 (el tope que se vio). Con `0` decimales ⇒ máx $999.999
-y `013000` = $13.000. El importe de F72 va **siempre ×100** (2 decimales), aparte de esta config.
+`ticket9^DD/MM/AA^HH:MM:SS^vendedor^PLU4^sector2^unid4^gramos5^drenado5^importe12`, líneas
+separadas por `;`, fin `F`.
 
-**A verificar en hw (contradicción):** la firma real dice `D0` (0 decimales), pero la investigación
-previa reportó `001000` = $10,00 (2 decimales). Resolver con una prueba: leer firma en vivo y
-escribir un PLU a $13.000, viendo cómo lo muestra. Según el resultado, o ya entra, o se setea 0
-decimales con func 42 (decisión de negocio: es **global**, afecta todos los precios e importes).
+- **Una línea por artículo.** N artículos → N líneas con el mismo `ticket` + `vendedor`.
+- **Importe:** valor ×100: `000000013300` = $133,00 (crudo visto). El kit lo interpreta ÷100 y dio
+  $31.550 y $41.015 en las ventas de 3,155 kg (coherente con $10.000 y $13.000/kg). Es lo cobrado,
+  no el precio de lista.
+- **Pesables:** `unid=0` y `gramos` con el peso (3155 g). **Unitarios:** `unid` con cantidad.
+- **Vendedores:** la balanza soporta **hasta 4** (`01` a `04`), dato confirmado por el usuario/
+  cliente (no se testea). En F72 se vieron `01`, `02` y `03`; el `04` es válido aunque no haya
+  aparecido todavía en un ticket.
+- **Anulado:** línea con `unid=0`, `gramos=0`, `importe=0`.
+- **Contador de tickets:** la balanza lo reinicia; la clave `fecha-ticket-posición` lo tolera.
+- **Tamaño de la respuesta:** ~7 KB con 101 líneas (≈65 bytes por línea). Hay que leer **hasta el
+  final de la trama** (`…;F` + XOR) con un buffer grande: con el buffer por defecto de .NET (4.096
+  bytes) la respuesta se corta y el XOR falla (se confundió con un error de la balanza).
+- **Letras de vendedor:** el cliente los llama A–D en la balanza; en F72 salen como `01`–`04`:
+  **A=`01`, B=`02`, C=`03`, D=`04`** (✅ confirmado por el usuario; C=`03` visto en el ticket 47).
+  El ERP guarda el número tal cual lo manda la balanza.
+- **Rango:** usar `DDMMAA` de ayer a hoy (ej. `251026`–`261026`). Con un solo día (`261026`–
+  `261026`) respondió `E7`; con "ayer y hoy" funciona.
+- Con tickets abiertos o recién impresos puede responder `E3` (ver arriba).
+- Sin nombre de producto ni precio unitario: se resuelve por PLU (ahora también con F62).
 
-## Estado de los bloqueantes (tras el manual)
+## Estado de los bloqueantes
 
-- ✅ **Tipo pesable (kg) por F4** — resuelto: campo "Tipo de venta" `P`/`U` + "Tara" en el registro.
-- ✅ **Precios ≥ $10.000** — resuelto a nivel protocolo (decimales, func 42); falta 1 confirmación hw.
-- ✅ **Borrar un PLU** — F5 identificada (manual). Sin probar en hw; riesgo sobre los 419 PLU, probar
-  solo sobre los de prueba.
-- ✅ **Significado de `campo1` / campos de F4** — resuelto: es "Versión de PLU"; registro completo arriba.
-- ❌ **Leer la ficha de un PLU** (nombre/precio/tipo) — el manual confirma que **no existe** en este
-  equipo (F3 "no se utiliza"). No hay respaldo previo a una escritura: el sistema debe ser la fuente
-  de verdad del PLU y reescribir el registro completo.
+- ✅ **Tipo pesable (kg) por F4** — F62 confirma `P`.
+- ✅ **Precios ≥ $10.000** — resuelto: **F33** en pesos enteros (probado con $12.500 y $13.000; el
+  teclado con $15.000, $20.000). No hace falta tocar decimales (func 42/F64).
+- ✅ **Leer la ficha de un PLU** — **F62** (no F3).
+- ✅ **Significado de la versión** — letra de gestión: `0` balanza / `1` PC; F31 y F62 la reflejan.
+- ✅ **Borrar un PLU (F5)** — ACK, y el ciclo borrar → recrear funciona.
+- ✅ **F33 sobre PLU con versión `0`**, **`MantenerTotales=M`**, **PLU unitario con F33**, **`Ñ` y
+  acentos** (Latin-1) — todos probados en el PLU 8000.
+- ✅ **Vendedor 04 (H5):** cerrado; la balanza soporta hasta 4 vendedores.
+- ✅ **H4 — tickets simultáneos de dos vendedores:** con el vendedor `04` ("D") con un ticket
+  **abierto**, F72 entregó completo (6.973 bytes, 101 líneas, XOR OK) el ticket cerrado del `03`
+  ("C", ticket 47). El ticket abierto **no aparece** hasta que se imprime. Una vez la balanza cortó
+  la respuesta a los 5 bytes (XOR inválido) y se recuperó en la lectura siguiente ⇒ reintentar.
+- ✅ **H3 — escritura con un ticket abierto:** F62, F33 y F4 sobre el PLU 8000 respondieron normal
+  (ACK, sin `E3`) con el ticket del `04` abierto. **No verificado:** si el cambio de precio afecta a
+  las líneas ya cargadas en el ticket abierto (no se confirmó si ese ticket contenía el PLU 8000).
+  **Regla decidida (usuario, 2026-10-26): NO cambiar precios con un ticket abierto.** Aunque la
+  balanza acepte la escritura, el driver no debe mandar F33/F4 mientras haya ventas en curso; debe
+  encolar el cambio y aplicarlo cuando no haya tickets abiertos.
+- ℹ️ **E3 no es solo "ticket abierto":** apareció tras imprimir un ticket y en otros estados
+  (menús/impresión), pero con un ticket abierto simple la balanza respondió. El driver trata `E3`
+  como "ocupada, reintentar".
+- 🚫 **Descartadas a propósito:** **F61** (PLU extendido: nutricional/EAN) no hace falta, F4 ya
+  cubre el CRUD; **F64/func 42** (formato de precio) son globales y la balanza ya está en 6:0.
 
-## Herramientas de sondeo (dev, frenar el puente antes — comparten el COM)
+## Herramientas (dev; frenar el puente antes — comparten el COM)
 
-- `scripts/sondearCuora.ts <func> [datos]` — envía una función cruda y muestra la respuesta.
-- `scripts/probarEscrituraPlu.ts` — lee/decodifica la firma y arma el registro F4 completo.
-  **Por defecto DRY-RUN** (imprime la trama, no escribe); `--enviar` para escribir.
-- **Kit de diagnóstico portátil** (`npm run build:kit` → `app/bridge/release-kit/`): `.exe`
-  autocontenido (Node SEA, no requiere instalar nada) para correr en la PC del cliente por
-  TeamViewer. Relevamiento de lectura (F2/F1/F28/F31/F72) con hex crudo + interpretado, informe
-  en `.txt`, y escritura controlada (F4/F5 dry-run por defecto, solo PLU 8000). Fuente en
-  `src/diagnostico/`, lógica pura de registros en `src/registroPlu.ts` (con tests).
+- `scripts/sondearCuora.ts <func> [datos]` — función cruda y respuesta.
+- `scripts/probarEscrituraPlu.ts` — firma + registro F4 (dry-run por defecto; `--enviar` escribe).
+- **Kit de diagnóstico portátil** (`npm run build:kit` → `app/bridge/release-kit/`): lectura
+  (F2/F1/F28/F31/F72) y escritura F4/F5 controlada, solo PLU 8000. **No trae F33, F62 ni F63**: en
+  la sesión del 2026-10-26 se probaron armando las tramas a mano por el puerto serie
+  (`System.IO.Ports.SerialPort`, 115200 8N1). Conviene agregarlos al kit.
 
 ```
 cd app/bridge
-npx tsx scripts/sondearCuora.ts 31                       # lista de PLU
-npx tsx scripts/probarEscrituraPlu.ts firma              # firma + decimales en vivo
-npx tsx scripts/probarEscrituraPlu.ts f4 --plu 8000 --precio 13000 --tipo P --nombre "PRUEBA KG"
-# ↑ dry-run; agregar --enviar para escribir de verdad (SOLO sobre PLU de prueba 7998/7999/8000)
+npx tsx scripts/sondearCuora.ts 63                       # formato de precio
+npx tsx scripts/sondearCuora.ts 62 8000                  # leer PLU 8000
+npx tsx scripts/probarEscrituraPlu.ts f4 --plu 8000 --precio 0 --tipo P --nombre "PRUEBA KG"
+# ↑ dry-run; precio 0 en F4 y el precio real con F33 (pesos enteros)
 ```
