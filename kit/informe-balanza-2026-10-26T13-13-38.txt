@@ -1,0 +1,22 @@
+Kit de diagnóstico balanza Systel Cuora — 26/10/2026, 10:13:38
+Informe: C:\Users\LOS HERMANOS\OneDrive\Desktop\ahora\kit\informe-balanza-2026-10-26T13-13-38.txt
+
+========================================================================
+VERIFICACIÓN DEL PUERTO
+========================================================================
+  COM3 está LIBRE y se puede usar.
+
+========================================================================
+REPORTE DE VENTAS / TICKETS (F72)
+========================================================================
+  Rango: 251026 a 261026
+[2026-10-26T13:13:38.999Z] Reporte de ventas (F72)
+  solicitud : 14 48 32 35 31 30 32 36 32 36 31 30 32 36 5f
+  respuesta : 14 48 45 33 2a
+  datos     : "E3"
+  XOR=OK  tiempo=415ms
+  ⚠ La balanza respondió error E3 (E3=ocupada, E5=formato, E6=registro, E7=sin datos/rango).
+
+Informe guardado en: C:\Users\LOS HERMANOS\OneDrive\Desktop\ahora\kit\informe-balanza-2026-10-26T13-13-38.txt
+Separá lo SIMULADO (dry-run) de lo VERIFICADO con la balanza: una función se da por
+probada solo cuando figura su respuesta real (ACK / datos) arriba.

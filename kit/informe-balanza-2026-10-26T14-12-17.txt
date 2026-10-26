@@ -1,0 +1,23 @@
+Kit de diagnóstico balanza Systel Cuora — 26/10/2026, 11:12:17
+Informe: C:\Users\LOS HERMANOS\OneDrive\Desktop\ahora\kit\informe-balanza-2026-10-26T14-12-17.txt
+
+========================================================================
+VERIFICACIÓN DEL PUERTO
+========================================================================
+  COM3 está LIBRE y se puede usar.
+
+========================================================================
+ESCRITURA DE PLU (F4)  [ENVÍO REAL]
+========================================================================
+  PLU 8000  tipo P  precio $0 (decimales=0 -> campo "000000")
+  registro(55) = "80001PRUEBA KG         00000000000000000010000P000000NN"
+[2026-10-26T14:12:17.960Z] Alta/modificación de PLU (F4) [ESCRIBE]
+  solicitud : 14 04 38 30 30 30 31 50 52 55 45 42 41 20 4b 47 20 20 20 20 20 20 20 20 20 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 31 30 30 30 30 50 30 30 30 30 30 30 4e 4e 55
+  respuesta : 14 04 41 43 4b 59
+  datos     : "ACK"
+  XOR=OK  tiempo=469ms
+  ✅ ACK: la balanza aceptó el registro.
+
+Informe guardado en: C:\Users\LOS HERMANOS\OneDrive\Desktop\ahora\kit\informe-balanza-2026-10-26T14-12-17.txt
+Separá lo SIMULADO (dry-run) de lo VERIFICADO con la balanza: una función se da por
+probada solo cuando figura su respuesta real (ACK / datos) arriba.
