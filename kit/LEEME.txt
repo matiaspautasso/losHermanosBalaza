@@ -1,0 +1,82 @@
+===========================================================================
+ KIT DE DIAGNÓSTICO - BALANZA SYSTEL CUORA (Erp Los Hermanos)
+===========================================================================
+
+QUÉ ES
+  Herramienta portátil para probar la balanza desde la PC Windows del cliente.
+  No necesita instalar Node ni clonar el proyecto: es un solo .exe + 1 archivo.
+  Genera un informe .txt con todas las consultas y respuestas para analizar.
+
+CONTENIDO DE LA CARPETA
+  kit-diagnostico-balanza.exe        el programa
+  @serialport+bindings-cpp.node      driver serie (DEBE quedar al lado del .exe)
+  diagnostico.bat                    doble clic para el relevamiento (deja la ventana abierta)
+  LEEME.txt                          este archivo
+
+FORMA MÁS SIMPLE (doble clic)
+  Doble clic en "diagnostico.bat": corre el relevamiento de lectura completo (no
+  escribe nada), muestra todo en pantalla y deja la ventana abierta. El informe
+  queda en esta misma carpeta como informe-balanza-*.txt.
+
+REQUISITOS
+  - Windows 64 bits.
+  - Controlador FTDI (USB-serie) instalado. La balanza se conecta por un
+    adaptador USB FTDI (VID 0403 / PID 6001).
+
+SI FALTA EL CONTROLADOR FTDI
+  Síntoma: al correr "detectar" no aparece ningún puerto FTDI, o en el
+  Administrador de dispositivos figura un dispositivo con signo de admiración.
+  Solución: instalar el driver VCP de FTDI (gratis), reiniciar y reintentar:
+    https://ftdichip.com/drivers/vcp-drivers/
+  (Descargar "VCP" para Windows, ejecutar el instalador, desconectar y volver
+   a conectar el cable USB de la balanza.)
+
+CÓMO SE USA (por línea de comandos: abrir CMD en esta carpeta)
+  Relevamiento completo de LECTURA (recomendado, no escribe nada):
+    kit-diagnostico-balanza.exe
+
+  Comandos individuales:
+    kit-diagnostico-balanza.exe detectar      lista puertos COM e identifica el FTDI
+    kit-diagnostico-balanza.exe firma         F2: firma + decimales
+    kit-diagnostico-balanza.exe peso          F1: peso del plato
+    kit-diagnostico-balanza.exe fecha         F28: reloj de la balanza
+    kit-diagnostico-balanza.exe plus          F31: cantidad de PLU cargados
+    kit-diagnostico-balanza.exe tickets       F72: ventas (ayer y hoy)
+       opcional: tickets --desde DDMMAA --hasta DDMMAA
+
+  Opciones generales:
+    --com COM6       forzar el puerto (si la autodetección elige mal)
+    --informe RUTA   guardar el informe en otra ruta
+
+ESCRITURA (CONTROLADA - leer antes)
+  Por defecto TODO es simulación (DRY-RUN): muestra la trama exacta y NO envía.
+  La escritura está limitada al PLU de prueba 8000.
+    Simular alta/modificación:
+      kit-diagnostico-balanza.exe f4 --precio 13000 --tipo P --nombre "PRUEBA KG"
+    Enviar de verdad (escribe en la balanza el PLU 8000):
+      kit-diagnostico-balanza.exe f4 --precio 13000 --tipo P --nombre "PRUEBA KG" --enviar
+    Borrar el PLU 8000 (irreversible, pide doble confirmación):
+      kit-diagnostico-balanza.exe f5 --enviar --confirmar-borrado
+  El kit NO cambia los decimales globales de la balanza ni borra nada por su
+  cuenta. No toca ningún PLU que no sea el 8000 salvo que se lo pida explícito.
+
+SECUENCIA DE PRUEBA SUGERIDA
+  1. Frenar el puente para liberar el puerto COM (tarea
+     "ErpLosHermanos-PuenteBalanza" en el Programador de tareas, o cerrar
+     puente-balanza.exe).
+  2. kit-diagnostico-balanza.exe detectar      (confirmar el COM del FTDI)
+  3. kit-diagnostico-balanza.exe                (relevamiento: firma, peso, fecha,
+                                                  PLU, tickets)
+  4. Hacer una VENTA DE PRUEBA en la balanza (uno o varios artículos, imprimir
+     el ticket).
+  5. kit-diagnostico-balanza.exe tickets        (ver qué devuelve: PLU, cantidad,
+                                                  vendedor, importe)
+  6. (opcional) pruebas de escritura sobre el PLU 8000 (ver arriba).
+  7. Guardar el/los archivos informe-balanza-*.txt de esta carpeta.
+  8. Volver a iniciar el puente.
+
+IMPORTANTE
+  Una función se considera PROBADA EN LA BALANZA solo cuando el informe muestra
+  su respuesta real (ACK o datos). Los DRY-RUN son simulaciones, no pruebas de
+  hardware.
+===========================================================================

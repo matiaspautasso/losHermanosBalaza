@@ -1,0 +1,80 @@
+===========================================================================
+ SECUENCIA DE PRUEBAS - BALANZA SYSTEL CUORA (para la sesion con el cliente)
+===========================================================================
+ Todos los comandos se corren en CMD abierto DENTRO de la carpeta "kit\".
+ (En el Explorador: entrar a kit\, escribir "cmd" en la barra de direccion
+  y Enter. O Shift + clic derecho -> "Abrir ventana de comandos aqui".)
+
+ Regla de oro: LECTURA = seguro. ESCRITURA (pasos 7-8) = solo PLU 8000 y con
+ --enviar explicito. Nada de cambiar decimales globales ni borrar sin OK.
+===========================================================================
+
+PASO 0 - Confirmar
+  [ ] Es la PC correcta (la que tiene la balanza).
+  [ ] La balanza esta ENCENDIDA y conectada por USB.
+
+PASO 1 - Frenar el puente (libera el puerto COM)
+  Abrir CMD COMO ADMINISTRADOR y ejecutar:
+      schtasks /end /tn "ErpLosHermanos-PuenteBalanza"
+      taskkill /IM puente-balanza.exe /F
+  (Si taskkill dice "no se encuentra el proceso": ya estaba frenado, OK.)
+
+PASO 2 - Detectar el puerto
+      kit-diagnostico-balanza.exe detectar
+  [ ] Aparece un puerto FTDI y dice "Puerto elegido: COMx".
+      Si NO aparece FTDI -> revisar cable / instalar driver (ver kit\LEEME.txt).
+
+PASO 3 - Relevamiento de LECTURA (no escribe nada)
+  Opcion simple: doble clic en diagnostico.bat
+  Opcion CMD:
+      kit-diagnostico-balanza.exe
+  Corre: firma(F2)+decimales, peso(F1), fecha(F28), lista PLU(F31), tickets(F72).
+  [ ] Anotar el valor de DECIMALES que muestra la firma (0 o 2).
+
+PASO 4 - Venta de prueba + tickets
+  [ ] Hacer una VENTA DE PRUEBA en la balanza (1 o varios articulos) e IMPRIMIR
+      el ticket.
+      kit-diagnostico-balanza.exe tickets
+  [ ] En el informe, mirar el bloque "RELEVAMIENTO": confirmar que trae PLU,
+      cantidad, vendedor e importe (y que NO trae nombre ni precio unitario).
+
+PASO 5 - Varios vendedores (H4 / H5)
+  [ ] Que distintos vendedores dejen tickets (incluido el vendedor 04) y repetir:
+      kit-diagnostico-balanza.exe tickets
+
+PASO 6 - Peso puntual (opcional)
+      kit-diagnostico-balanza.exe peso
+
+---------------------------------------------------------------------------
+ ESCRITURA CONTROLADA  (solo PLU 8000) - OPCIONAL, con autorizacion
+---------------------------------------------------------------------------
+
+PASO 7 - Prueba clave de DECIMALES (H1) sobre el PLU 8000
+  a) Simular (NO envia, muestra la trama exacta):
+      kit-diagnostico-balanza.exe f4 --precio 13000 --tipo P --nombre "PRUEBA KG"
+  b) Enviar de verdad al PLU 8000:
+      kit-diagnostico-balanza.exe f4 --precio 13000 --tipo P --nombre "PRUEBA KG" --enviar
+  c) Vender/imprimir el PLU 8000 en la balanza y MIRAR como muestra el precio:
+      - Si muestra $13.000  -> 0 decimales, H1 resuelto tal cual.
+      - Si muestra $130,00  -> 2 decimales (tope $9.999,99). Ahi decidimos si
+        conviene pasar a 0 decimales (es GLOBAL, decision del duenio).
+
+PASO 8 - Borrado (SOLO si se autoriza, solo PLU 8000, irreversible)
+      kit-diagnostico-balanza.exe f5 --enviar --confirmar-borrado
+
+---------------------------------------------------------------------------
+
+PASO 9 - Cerrar y restaurar
+  [ ] Guardar TODOS los archivos kit\informe-balanza-*.txt (son el resultado).
+  [ ] Reactivar el puente:
+      schtasks /run /tn "ErpLosHermanos-PuenteBalanza"
+      (o reiniciar la PC, que lo levanta solo).
+
+PASO 10 - Enviar
+  [ ] Pasar los informe-balanza-*.txt (y una foto de como quedo el precio del
+      PLU 8000 en la balanza, si se hizo el paso 7).
+
+===========================================================================
+ RECORDATORIO: una funcion se da por PROBADA EN HARDWARE solo cuando el
+ informe muestra su respuesta real (ACK / datos). Los DRY-RUN son simulacion.
+===========================================================================

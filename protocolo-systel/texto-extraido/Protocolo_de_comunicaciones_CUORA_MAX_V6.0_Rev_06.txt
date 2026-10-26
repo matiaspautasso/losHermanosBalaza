@@ -1,0 +1,2223 @@
+
+===== PAGE 1 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       1
+Protocolo de comunicación CUORA MAX V6.0
+Rev 06  12/Julio/2016
+Índice de contenido
+Introducción
+ 
+                                                                                                                             
+ 
+ 
+............................................................................................................................
+ 
+ 2  
+Descripción del protocolo:...........................................................................................................................2
+Trama  de transmisión PC-Balanza:............................................................................................................3
+Trama de respuesta Balanza-PC :...............................................................................................................3
+Inicio y Fin de las Tramas............................................................................................................................3
+Confirmación de recepción exitosa y confirmación de error detectado........................................................3
+Detección de error.......................................................................................................................................4
+Conjunto de funciones administrativas del protocolo.
+ 
+                                                            
+ 
+ 
+...........................................................
+ 
+ 4  
+Solicitud de peso, estabilidad y tara (función 1):..........................................................................................4
+Solicitud de firma digital (función 2):............................................................................................................5
+Solicitud de estado (PING)  (función 23).....................................................................................................6
+Configuración de código de barras (función 8)............................................................................................6
+Indicación de finalización de sincronización. Solicitud de liberar el equipo. (función 25).............................7
+Solicitud de Cambio de Marquesina (función 6):.........................................................................................7
+Solicitud de Cambio de Velocidad de las Marquesina (función 15):............................................................7
+Solicitud de Cambio de Tono de Impresiones (función 12):.........................................................................8
+Solicitud de envío de un PLU desde la balanza a la PC (función 3):...........................................................8
+Envío de un PLU desde la PC a la balanza (función 4):..............................................................................9
+Solicitud de Borrar un PLU (función 5)......................................................................................................10
+Solicitud cambio de precios de un PLU (función 33):................................................................................10
+Envío de sector desde la PC a la balanza (función 10).............................................................................10
+Envío de lista de sectores desde la Balanza a la PC (función 11).............................................................11
+Solicitud de borrar sector (función 9).........................................................................................................11
+Solicitud de cambio de fecha y hora (función 16)......................................................................................12
+Solicitud de fecha y hora (función 28)........................................................................................................12
+Datos del Comercio (función 17)...............................................................................................................13
+Solicitud de creación/cambio de un acceso directo (función 18)...............................................................13
+Solicitud de lista de accesos directos (función 19)....................................................................................13
+Solicitud de borrar un acceso directo (función 24).....................................................................................14
+Solicitud de apagado de la balanza (función 26).......................................................................................14
+Solicitud de envío del listado de todos los PLU cargados (función 31)......................................................14
+Solicitud de cierre de ventas(función 32)...................................................................................................15
+Solicitud de desgaste del cabezal de impresión (función 36)....................................................................15
+Guardar el nombre de un vendedor (función 38).......................................................................................15
+Cantidad de decimales en los importes (función 42).................................................................................16
+Cantidad de copias de los comprobantes (función 41)..............................................................................16
+Esperar sincronización de datos al inicio (función 35)...............................................................................16
+Configurar el tipo de comprobante a imprimir (función 22)........................................................................17
+Configurar permisos de precios (función 40).............................................................................................17
+Configuraciones generales del equipo (función 7).....................................................................................17
+Solicitud de envío de configuración completa del equipo (función 39)......................................................18
+Solicitud de envío de un PLU extendido desde la balanza a la PC (función 62):.......................................19
+Envío de un PLU extendido desde la PC a la balanza (función 61):..........................................................20
+Envío de un origen desde la PC a la balanza (función 46):.......................................................................21
+Envío de un origen desde la balanza a la PC (función 49):.......................................................................22
+Solicitud de borrar Origen (función 70)......................................................................................................22
+Solicitud de envío del listado de todas los orígenes cargados (función 59)...............................................23
+Envío de un texto de conservación desde la PC a la balanza (función 47):..............................................23
+Envío de un texto de conservación  desde la balanza a la PC (función 50):.............................................24
+
+===== PAGE 2 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       2
+Borrado de un texto de conservación  desde la balanza a la PC (función 71):..........................................25
+Solicitud de envío del listado de todas los textos de conservaciones cargadas (función 60)....................25
+Envío de un texto de Receta de ingredientes desde la PC a la balanza (función 45):...............................25
+Envío de un texto de receta de ingredientes desde la balanza a la PC (función 56):................................26
+Solicitud de envío del listado de todas las recetas de ingredientes cargadas (función 55).......................27
+Solicitud de borrar receta (función 69).......................................................................................................27
+Envío de la moneda desde la PC a la balanza (función 64):.....................................................................28
+Envío de la moneda actual desde la balanza a la PC (función 63):...........................................................28
+Envío de un usuario desde la PC a la balanza (función 65):.....................................................................28
+Consulta de un usuario desde la PC a la balanza (función 66):................................................................29
+Solicitud de envío del listado de todos los usuarios cargados (función 67)...............................................29
+Solicitud de borrar usuario cargado (función 68).......................................................................................30
+Funciones especificas para la gestión de etiquetas configurables.
+ 
+                                     
+ 
+ 
+....................................
+ 
+ 30
+  
+Envío de un objeto gráfico desde la pc a la balanza (función 87)..............................................................30
+Lectura de un objeto gráfico desde la balanza (función 82)......................................................................31
+Funciones especificas para la gestión de las ventas.
+ 
+                                                          
+ 
+ 
+.........................................................
+ 
+ 33
+  
+Reporte de ventas(función 72)...................................................................................................................33
+Solicitud de cierre de ventas (función 32)..................................................................................................34
+Solicitud de Escritura de códigos genéricos (función 74):.........................................................................34
+Solicitud de Lectura de códigos genéricos (función 73):............................................................................35
+Introducción
+Descripción
+ 
+  del protocolo:
+ 
+ 
+El siguiente protocolo de comunicaciones describe el método de codificación de tramas de datos para 
+equipos CUORA MAX. Podrá ser utilizado con protocolos físicos Ethernet/WiFi mediante el protocolo TCP/IP 
+o a través de una interfase USB. En los equipos con Ethernet/WiFi, el protocolo que se expone solo 
+realizará modificaciones en el equipo si el subsistema de comunicaciones de la balanza se encuentra 
+propiamente configurado y conectado en la red(ver anexos VI y VII, como conectar a red WLAN o LAN). En 
+dicho caso, en la pc se encontrará un puerto COM virtual que permitirá realizar la comunicación con el 
+mismo.
+El sistema soporta transmisiones solo de modo “Unicast” ya que utiliza puertos virtualizados.
+En el modo Unicast, cada mensaje se direccionará a un equipo en particular, y el equipo siempre 
+constará, ya sea con el dato solicitado, con una señal de confirmación de recepción correcta, o con un 
+mensaje de error.
+Modo Unicast:
+
+===== PAGE 3 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       3
+Trama  de transmisión PC-Balanza:
+Dirección
+Función
+Cadena de datos
+Verificación
+1 byte
+1 byte
+N bytes
+1 byte
+•
+Dirección: Número de 1 byte, en formato decimal de 0 a 99 que identifica al receptor del mensaje. 
+(0=Transmisión Broadcast).
+•
+Función: Número de 1 byte en formato decimal que describe la sentencia que deberá ejecutar la 
+balanza.
+•
+Cadena de Datos: Cadena de datos en formato ASCII con la información necesaria según la 
+función. Algunas funciones no necesitan transmitir Cadena de Datos.
+•
+Verificación: XOR de los bytes de la trama (incluye dirección, función y cadena de datos).
+Trama de respuesta Balanza-PC :
+Dirección
+Función
+Cadena de datos
+Verificación
+1 byte
+1 byte
+N bytes
+1 byte
+•
+Dirección: Identifica a la balanza que esta respondiendo.
+•
+Función: Confirma la función que recibió y a la que pertenece la respuesta.
+•
+Cadena de Datos: Cadena de datos en formato ASCII según el dato solicitado.
+•
+Verificación: XOR de los bytes de la trama (incluye dirección, función y cadena de datos).
+Algunas respuestas pueden consistir solo en un mensaje de confirmación de recepción exitosa o en un 
+mensaje de error. En cualquier caso se cumplirá con el mismo formato de respuesta.
+Inicio y Fin de las Tramas
+La detección de inicio y fin de trama se hará por tiempo (aprox 5ms). Esto implica que no pueden existir 
+pausas prolongadas durante la transmisión de una cadena de datos, porque podrá ser interpretada como 
+finalización de la trama. 
+Confirmación de recepción exitosa y confirmación de error detectado
+Cada vez que la PC envíe una orden a la balanza (en modo Unicast), esta deberá generar un mensaje 
+que permita al servidor conocer si el mensaje se recibió y procesó correctamente.
+Cuando la balanza recibe una trama u orden, analizará su contenido. Si detecta algún error en la misma, 
+dará aviso al servidor para que este pueda re-procesar el mensaje. De lo contrario, si el mensaje se recibe 
+sin errores, la balanza podrá emitir una trama de datos como respuesta (en el caso de que se solicite el 
+peso por ejemplo), o simplemente una trama que avisa que se recibió y procesó correctamente el 
+mensaje.Recepción y procesamiento exitoso del mensaje
+Respuesta:
+La Balanza envía una cadena de datos de confirmación de recepción y procesamiento de los datos 
+consistente en: IP + Función + Datos + CRC
+
+===== PAGE 4 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       4
+DATO
+BYTES
+DETALLE
+ACK
+3letras
+La balanza emite la leyenda ACK como 
+confirmación de que recibió y procesó una 
+orden.
+• Detección de error
+ 
+ 
+Cuando la balanza detecta un error en una trama, orden o su contenido, dará aviso al servidor, emitiendo 
+un mensaje con una codificación que permite distinguir que tipo de error se produjo: 
+Respuesta:
+La Balanza envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Leyenda de tipo “En” donde “n” es 
+un número que representa el tipo 
+de error encontrado
+2 Letras
+El tipo de error se codifica del siguiente 
+modo:
+E1= No coincide la verificación calculada 
+con la transmitida.
+E2= Se saturo el buffer de recepción de 
+datos.
+E3= Se desatendieron datos.
+E4= Se desconoce el mensaje 
+(función/orden no valida).
+E5= Se recibieron mas/menos datos de 
+los necesarios para esa acción. 
+E6= Dato fuera de limites para esta 
+acción. 
+E7= El dato solicitado no existe. 
+E8= Error en el contenido de un dato (el 
+contenido de la cadena tiene datos no 
+validos). 
+E9= Error por desbordamiento del dato 
+(un acumulador de total de venta excede 
+el limite)
+Conjunto de funciones administrativas del protocolo.
+• Solicitud de peso, estabilidad y tara (función 1):
+ 
+ 
+La PC solicita el peso a la balanza , esta lo envía con la misma resolución que se vé en la pantalla, 
+enviando ademas un indicador que permite saber la condición de estable/inestable del peso.
+Solicitud:
+La PC envía una cadena de 3 bytes: IP + Función + CRC
+Respuesta:
+La balanza responderá: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+
+===== PAGE 5 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       5
+Peso Neto
+6 números
+Ó
+Signo “-” y 
+5 números
+El peso se envía en gramos, sin coma. Si es negativo, se envía un signo menos
+en lugar del primer número 
+(Ejemplo: 000250 = 250g)
+(Ejemplo: -00250 = -250g)
+Condicion de estable
+1 letra
+e=Estable
+i=Inestable
+Tara 
+6 nros
+La Tara se envía en gramos, sin coma
+• Solicitud de firma digital (función 2):
+ 
+ 
+Cuando la PC detecta una balanza conectada a la red, puede solicitar el envío de la “firma digital” del 
+equipo. Esta firma digital contendrá la mayoría de los datos necesarios para que el sistema en la PC sepa 
+que equipo es, que tipo de datos el equipo aceptará, que versión de protocolo posee,  cuantos PLU y 
+accesos directos tiene el equipo como capacidad, etc.
+Solicitud:
+La PC envía una cadena de 3 bytes: IP + Función + CRC
+Respuesta:
+La Balanza envía una cadena de 32 bytes: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Letra “F”
+1 Letra
+Tipo de Producto
+4 números
+Una trama de 4 bytes en formato ASCII que identifica al producto. Es única por producto, no 
+por equipo.
+Letra “C”
+1 Letra
+Capacidad Máxima
+6 nros
+Una trama de 6 bytes en formato ASCII que representan la capacidad máxima del equipo en 
+gramos. 
+Letra “S”
+1 Letra
+Versión de protocolo de 
+comunicación
+4 Números
+Una trama de 4 bytes en formato ASCII que identifican la versión de protocolo de 
+comunicaciones implementado en el equipo. En este caso “0040”. Este dato es útil 
+para que la PC configure el formato de las tramas y sepa que órdenes son 
+compatibles con el equipo.
+Letra “P”
+1 letra
+Cantidad de PLUs
+5 números
+Una trama de 5 bytes en formato ASCII que representan la cantidad de PLUs que puede 
+aceptar el equipo.
+Letra “A”
+1 letra
+Cantidad de Accesos 
+Directos
+3 nros
+Letra “D”
+1 letra
+Decimales de precio
+1Nro
+1 bytes en formato ASCII que representan la cantidad de decimales que el equipo utiliza para 
+los dígitos de precio e importe.
+
+===== PAGE 6 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       6
+• Solicitud de estado (PING)  (función 23)
+ 
+ 
+La PC envía una orden para que la balanza responda una secuencia de datos que permitirán la 
+identificación rápida del estado actual de la balanza en la red. Esta orden permitirá saber si el equipo se 
+encuentra conectado, desconectado, desactualizado, esperando actualización de datos, etc.
+Cada vez que se encienda la balanza, la base de datos se tomará como desactualizada por no saber el 
+equipo si existieron movimientos en el servidor. En caso de que el equipo esté configurado para esperar 
+sincronización de datos antes de comenzar a trabajar, cuando la balanza se encienda, quedará bloqueada a 
+la espera de la sincro, hasta tanto el servidor controle y asegure la actualización de datos (ver manual del 
+equipo).
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + CRC
+Respuesta:
+La Balanza envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Comunicación 
+Balanza-PC
+2 letra
+Por el momento “00”. 
+A futuro: 2 caracteres previstos para codificar mensajes que la balanza necesite comunicarle 
+a la PC.
+Estado
+1 letra
+Letra “ T ” : Trabajando Actualizado. 
+Letra “ D ” : Trabajando Desactualizado. 
+Letra “ S ” : Bloqueado en el inicio, esperando sincronización de datos.
+• Configuración de código de barras (función 8)
+ 
+ 
+La PC envía un orden para que la balanza reconfigure el código de barras
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC.
+DATO
+BYTES
+DETALLE
+Tipo de Código a 
+Modificar
+1 Letra
+S=Configuración del código de barras para suma de artículos
+P=Configuración del código de barras para artículos de venta por Peso
+U=Configuración del código de barras para artículos de venta por Unidad
+Datos de Código
+12 Letra
+0,1,...,9= Números fijos
+I=Importe
+B=Balanza
+P=Código del PLU (Solo Tipo de código =  “ I ”)
+C=Cantidad (kg o unidades) (Solo Tipo de código =  “ I ”)
+S=Sección (Solo Tipo  de código =  “I ”)
+A=Cantidad de artículos sumados (Solo Tipo  de código = “ S ”)
+
+===== PAGE 7 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       7
+• Indicación de finalización de sincronización. Solicitud de liberar el 
+ 
+ 
+equipo. (función 25)
+La PC envía un orden que le indica al equipo que los datos de las bases de datos ya fueron 
+sincronizadas y que el equipo se encuentra actualizado.
+En caso de que el equipo se encuentre bloqueado en el inicio por estar esperando sincronización inicial 
+de datos (ver manual balanza), esta misma orden, al indicar que los datos se encuentran actualizados y que 
+se finalizó la sincronización, servirá para la liberación del equipo.
+La respuesta a un Ping después de este comando debería responder estado = “T” (trabajando 
+actualizad), siempre que no se modifiquen parámetros del equipo o que no se apague la balanza.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + CRC.
+Respuesta:
+La Balanza envía un mensaje de ACK o de error según corresponda.
+• Solicitud de Cambio de Marquesina (función 6):
+ 
+ 
+Esta función permite a la PC enviar una cadena de datos que la balanza mostrará a modo de 
+marquesina, desplazándose en la parte inferior del display cuando el equipo no está en uso por un tiempo 
+de algunos segundos.
+Solicitud:
+La PC envía una cadena de longitud variable: IP + Función + Datos+ CRC
+DATO
+BYTES
+DETALLE
+Nueva Marquesina
+100 
+Letras
+Las cadena de Datos consistirá en una trama en formato ASCII de un 
+máximo de 100 caracteres. La cadena puede tener cualquier longitud, 
+siempre que no supere el máximo. No se necesita enviar ninguna 
+información de fin de trama, la balanza sabrá diferenciar el final del CRC. 
+Si la cadena de datos se envía vacía, la balanza no mostrará ninguna 
+marquesina.
+Respuesta:
+La Balanza envía un mensaje de ACK o de error según corresponda.
+• Solicitud de Cambio de Velocidad de las Marquesina (función 15):
+ 
+ 
+Esta función permite a la PC configurar la velocidad a la que se desplazan las marquesinas publicitarias.
+Solicitud:
+La PC envía una cadena de 4 bytes: IP + Función + Dato + CRC
+
+===== PAGE 8 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       8
+DATO
+BYTES
+DETALLE
+Velocidad de los 
+mensajes
+1 nro
+1 a 9 (1= Lento, 9 = Rápido
+Respuesta:
+La Balanza envía un mensaje de ACK o de error según corresponda.
+• Solicitud de Cambio de Tono de Impresiones (función 12):
+ 
+ 
+Esta función permite a la PC configurar el tono de impresión de la balanza (ver manual del equipo).
+Solicitud:
+La PC envía una cadena de 4 bytes: IP + Función + Dato + CRC
+DATO
+BYTES
+DETALLE
+Tonos
+1 nro
+número de 1 a 4 (1 = tono mínimo, 4= tono máximo)
+Respuesta:
+La Balanza envía un mensaje de ACK o de error según corresponda.
+• Solicitud de envío de un PLU desde la balanza a la PC (función 3):
+ 
+ 
+La PC solicita a la balanza que esta le envíe la totalidad de datos de un PLU(función heredada del equipo 
+anterior). No se utiliza en este equipo.
+Solicitud:
+La PC envía una cadena de 7 bytes: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Número de PLU
+4 
+números
+0001 a Máxima cantidad de PLUs del equipo (8000 por ejemplo)
+Respuesta:
+La Balanza envía una Mensaje de error como el explicado anteriormente.
+
+===== PAGE 9 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       9
+• Envío de un PLU desde la PC a la balanza (función 4):
+ 
+ 
+La PC envía un PLU a la balanza. Puede ser un PLU nuevo o una modificación de un PLU existente.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos 
+DATO
+BYTES
+DETALLE
+Número de PLU
+4 
+números
+0001 a Máxima cantidad de PLUs del equipo (8000 por ejemplo)
+Version de PLU
+1 Letra
+Indica si el PLU se creó/Modificó en la balanza o en la PC
+Nombre del PLU
+18 Letras Caracteres alfanuméricos aceptados por el equipo(según máscar del 
+equipo)
+Precio Lista 1
+6 
+Números
+De 000000 a 999999. No incluye coma.
+ 
+Precio Lista 2
+6 
+Números
+De 000000 a 999999. No incluye coma.
+Código de PLU
+5 
+Números
+De 00001 a 99997
+Nro de sección
+2 
+Números
+De 01 a 99
+Días de 
+vencimiento
+4 
+Números
+0000 = sin vto.
+Tipo de venta
+1 Letra
+P= Pesable
+U= Unitario
+Tara de PLU
+6 
+Números
+representa la tara del PLU en gramos y sin coma, solo tiene sentido en 
+productos pesables, en caso de no existir tara o de que el producto sea 
+unitario, la tara será 000000. 
+Mantener Totales
+1 Letra
+Letra “N” o “M” ,1 carácter que informa si el producto es una producto 
+nuevo o una modificación de un producto existente. Cuando se envía la 
+letra “N”, la balanza grabará el PLU recibido colocando los totalizador de 
+los acumulados de ventas en cero. Si se recibe la letra “M”, la balanza 
+grabará el PLU, pero dejará los totalizadores que estaban antes.
+Se usará N solo cuando:  
+- Se envía un PLU completamente nuevo.
+- Cuando se modifique la condición de unitario/pesable.
+- Cuando se cambie en Número o Código de un PLU   
+Ingredientes Si/NO
+1 Letra
+Letra “S” o “N” ,1 carácter que informa si el producto posee descripción de 
+ingredientes/otros datos. S=si tiene ingredientes. N=No
+Ingredientes/otros 
+Datos
+100 
+Letras
+Solo en caso de que el campo anterior sea “S”.
+Respuesta:
+La Balanza envía una Mensaje de error como el explicado anteriormente. Nota: la tara de PLU es 
+
+===== PAGE 10 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       10
+chequeada para que se encuentre en los limites, en caso contrario se coloca “0.00” .
+• Solicitud de Borrar un PLU (función 5)
+ 
+ 
+Esta función permite a la PC solicitar a la balanza que se elimine un PLU de la memoria (la balanza 
+verificará y eliminará también su acceso directo en caso de que exista)
+Solicitud:
+La PC envía una cadena de 7 bytes: IP + Función + Dato + CRC
+DATO
+BYTES
+DETALLE
+Número de PLU
+4 
+números
+0001 a Máxima cantidad de PLUs del equipo (8000 por ejemplo)
+Respuesta:
+La Balanza envía una Mensaje de ACK o de error según corresponda.
+• Solicitud cambio de precios de un PLU (función 33):
+ 
+ 
+La PC envía los nuevos precios de un PLU a la balanza. La balanza cambia los precios manteniendo 
+todos los demás datos intactos. Se mantienen los totalizadores de ventas.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Número de PLU
+4 
+números
+0001 a Máxima cantidad de PLUs del equipo (8000 por ejemplo)
+Versión del PLU
+1 Letra
+Precio de Lista 1
+6 
+Números
+De 000000 a 999999. No incluye coma.
+Precio de Lista 2
+6 
+Números
+De 000000 a 999999. No incluye coma.
+Respuesta:
+La Balanza envía una Mensaje de ACK o de error según corresponda.
+• Envío de sector desde la PC a la balanza (función 10)
+ 
+ 
+La PC envía un nuevo sector o un cambio en la descripción/nombre de un sector ya existente.
+
+===== PAGE 11 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       11
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Número de Sector
+2 
+números
+De 01 a 99
+Nombre del Sector
+18 Letras Caracteres alfanuméricos. De ser necesario completar con espacios en blanco
+Respuesta:
+La Balanza envía una Mensaje de ACK o de error según corresponda.
+• Envío de lista de sectores desde la Balanza a la PC (función 11)
+ 
+ 
+La PC solicita que la balanza le envíe un listado con todos los sectores que posee en memoria.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + CRC
+Respuesta:
+La Balanza envía una cadena de datos consistente en: IP + Función + Datos + CRC. La cadena de datos 
+de la balanza consistirá en una lista completa de todas las secciones cargadas, separadas por “;” (punto y 
+coma).
+DATO
+BYTES
+DETALLE
+Número de Sector
+2 
+números
+De 01 a 99
+Nombre del Sector
+19 Letras Caracteres alfanuméricos. De ser necesario completar con espacios en blanco
+• Solicitud de borrar sector (función 9)
+ 
+ 
+La PC envía una orden para que la balanza elimine un sector existente. La balanza eliminará el sector 
+con todos sus PLU asociados y accesos directos a esos PLU. La operación puede demorar unos instantes.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Número de Sector
+2 
+números
+De 01 a 99
+
+===== PAGE 12 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       12
+Respuesta:
+La Balanza puede responder con:
+•
+Una cadena que describe el error correspondiente, en caso de que existiese alguno.
+•
+En caso de recepción exitosa, la balanza enviará el carácter “I”, indicando el inicio de la operación, 
+seguido por una cadena de confirmación de ejecución exitosa de la orden. La letra “I” tiene por 
+objetivo indicar a la PC que la orden se recibió pero se requiere de tiempo para realizar la 
+operación.
+• Solicitud de cambio de fecha y hora (función 16)
+ 
+ 
+La PC envía una orden para que la balanza actualice la fecha y la hora
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Hora
+2 
+números
+Formato 24 Hrs
+Minutos
+2 
+números
+Segundos
+2 
+números
+Día
+2 
+números
+Mes
+2 
+números
+Año
+2 
+números
+Respuesta:
+La Balanza envía una Mensaje de ACK o de error según corresponda.
+• Solicitud de fecha y hora (función 28)
+ 
+ 
+La PC envía una orden para que la balanza responda la fecha y la hora
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + CRC
+Respuesta:
+La balanza envía una cadena de datos consistente en: IP + Función + Datos + CRC
+La cadena de datos será en el formato “HH:MM:SS DD/MM/AA”
+
+===== PAGE 13 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       13
+• Datos del Comercio (función 17)
+ 
+ 
+La PC envía una orden para que la balanza cambie las dos líneas de datos del comercio que aparecerán 
+el las impresiones (a modo de encabezado).
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+1º Linea de 
+impresión
+18 Letras Caracteres alfanuméricos (válidos según la máscara del equipo) para la primera 
+línea de impresión (completar con espacios justificando a la izquierda, la balanza 
+centrará la impresión de manera automática).
+2º Linea de 
+impresión
+34 Letras Caracteres alfanuméricos (válidos según la máscara del equipo) para la segunda 
+línea de impresión (completar con espacios justificando a la izquierda, la balanza 
+centrará la impresión de manera automática).
+• Solicitud de creación/cambio de un acceso directo (función 18)
+ 
+ 
+La PC envía una orden para que la balanza guarde un acceso directo a un artículo
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Nro accesso 
+directo
+3 Nros
+De 01 a máximo permitido por el equipo.
+Nro PLU
+4 Nros
+De 0001 a máximo permitido por el equipo
+• Solicitud de lista de accesos directos (función 19)
+ 
+ 
+La PC envía una interrogación para que la balanza le conteste una lista con la configuración de los 
+accesos directos
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + CRC
+Respuesta:
+La balanza envía una cadena de datos consistente en: IP + Función + Datos + CRC
+•
+Las cadena de Datos consistirá en un trama en formato ASCII que contendrá todos los accesos 
+directos del equipo separados con caracteres “ ; ”, (y finalizando con un nuevo carácter “ ; ”). 
+
+===== PAGE 14 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       14
+DATO
+BYTES
+DETALLE
+Nro accesso 
+directo
+3 Nros
+De 001 a máximo permitido por el equipo.
+Nro PLU
+4 Nros
+De 0001 a máximo permitido por el equipo
+Separacion
+1 Letra
+Caracter ”;”
+• Solicitud de borrar un acceso directo (función 24)
+ 
+ 
+La PC envía una orden para que la balanza elimine un acceso directo a un artículo.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Dato + CRC
+DATO
+BYTES
+DETALLE
+Nro accesso 
+directo
+3 Nros
+De 01 a máximo permitido por el equipo.
+• Solicitud de apagado de la balanza (función 26)
+ 
+ 
+La PC envía una  orden que le indica a la balanza que debe apagarse.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + CRC.
+• Solicitud de envío del listado de todos los PLU cargados (función 31)
+ 
+ 
+La PC envía una  orden para que la balanza responda un listado de todos los PLU que posee cargados, 
+incluyendo un carácter de versión que permitirá a la PC conocer si el artículo se grabó desde la PC o desde 
+la balanza.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + CRC.
+Respuesta:
+La Balanza envía una cadena de datos consistente en: IP + Función + Datos + CRC
+•
+La cadena de Datos consistirá en un trama en formato ASCII que contendrá una secuencia de PLUs 
+guardados en la memoria, terminando con un carácter “F”:
+DATO
+BYTES
+DETALLE
+Letra “N”
+1 Letra
+Separador de campo(indica Número)
+
+===== PAGE 15 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       15
+Nro PLU
+4 Nros
+De 0001 a máximo permitido por el equipo
+Letra “V”
+1 letra
+Indica versión del PLU
+Version de PLU
+1 número
+número “0” = El PLU fue creado desde la propia balanza
+número “1” = El PLU está siendo gestionado (creado y/o actualizado) desde la PC
+número “2” = El PLU fué modificado desde la balanza.
+Letra “F”
+1 letra
+Letra “F” indica el fin de la trama
+Nota: Los campos en amarillo pueden repetirse
+• Solicitud de cierre de ventas(función 32)
+ 
+ 
+La PC envía una  orden para que la balanza genere el cierre de ventas acumuladas de todos los PLU. Es 
+importante destacar que esta función puede demorar unos instantes. Se emitirá un carácter que dará aviso 
+de que se recibió la orden y se está procesando. Por otra parte, esta funcion permite poner a cero el nro de 
+ticket.  Al final, se dará aviso de la conclusión de la orden.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + CRC.
+Respuesta:
+La Balanza envía una cadena de datos consistente en: IP + Función + Datos + CRC
+•
+Los cadena de Datos consistirá solo en una letra “I” que indica el inicio de la actividad. Al finalizarla, 
+enviará el ACK de confirmación de ejecución de la orden.
+• Solicitud de desgaste del cabezal de impresión (función 36)
+ 
+ 
+La PC envía una  orden para que la balanza le informe acerca del estado porcentual de desgaste del 
+cabezal de impresión.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + CRC.
+Respuesta:
+La Balanza envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+% de Desgaste
+3 Digitos
+De 000 a 999(Nota: el desgaste puede superar el 100%.999 implica 999%)
+• Guardar el nombre de un vendedor (función 38)
+ 
+ 
+La PC envía una  orden para que la balanza registre y grabe el nombre de un determinado vendedor
+
+===== PAGE 16 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       16
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC.
+DATO
+BYTES
+DETALLE
+Nro de vendedor
+1 Digitos
+De 1 a 4
+Nombre del vendedor
+18 
+caracteres
+18 caracteres, justificados a la Izquierda, rellenando con espacios en blanco
+• Cantidad de decimales en los importes (función 42)
+ 
+ 
+La PC envía una orden para que la balanza configure la forma de visualización de la cantidad de 
+decimales de precios e importes, tanto en visores como en las impresiones. Solo se adoptan dos 
+modalidades: Sin coma o con 2 decimales.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC.
+DATO
+BYTES
+DETALLE
+Cantidad de decimales 
+despues de la coma
+1 Digitos
+0 o 2 (0 sin decimales)
+• Cantidad de copias de los comprobantes (función 41)
+ 
+ 
+La PC envía una orden para que la balanza configure la cantidad de copias a imprimir de cada ticket o 
+etiqueta
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC.
+DATO
+BYTES
+DETALLE
+Cantidad de copias
+1 Digitos
+De 1 a 9 copias de cada comprobante(ticket/etiqueta)
+• Esperar sincronización de datos al inicio (función 35)
+ 
+ 
+La PC envía una orden para que la balanza configure el método de inicialización. En caso de esperar 
+sincronización inicial de datos, la balanza al encenderse, quedará bloqueada a la espera de que la PC 
+actualice las bases de datos y libere el funcionamiento (ver manual del equipo)
+
+===== PAGE 17 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       17
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC.
+DATO
+BYTES
+DETALLE
+Esperar Sincronizacion
+1 Letra
+S=SI/N=NO
+• Configurar el tipo de comprobante a imprimir (función 22)
+ 
+ 
+La PC envía una orden para que la balanza configure el tipo de comprobante a imprimir. 
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC.
+DATO
+BYTES
+DETALLE
+Tipo de comprobante
+1 Letra
+T= Utilizar siempre Ticket
+E= Utilizar siempre Etiquetas
+N= No imprimir en ningún caso
+A= Reconocer el papel al abrir el cabezal
+• Configurar permisos de precios (función 40)
+ 
+ 
+La PC envía una orden para que la balanza configure los niveles de permisos para la utilización de 
+listados de precios y precios manuales. En caso de estar en medio de una transacción(ticket abierto) u 
+operación con PLUs Escurridos/Congelados, el equipo responderá con Error.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC.
+DATO
+BYTES
+DETALLE
+Nivel de permiso
+1 número
+0= Solo se permite utilizar la Lista 1
+1= Solo se permite utilizar Lista 1 y Lista 2
+2= Se permite utilizar ambas listas y precios manuales
+• Configuraciones generales del equipo (función 7)
+ 
+ 
+La PC envía algunos parámetros de configuraciones de la balanza (poco utilizados).
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC.
+DATO
+BYTES
+DETALLE
+Permitir Sumas en 
+1 Letra
+S=Si;N=No;Otro valor = el parametro permanece sin cambio
+
+===== PAGE 18 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       18
+modo etiqueta
+Imprimir el código de 
+barras en los tickets
+1 letra
+S=Si;N=No;Otro valor = el parametro permanece sin cambio
+• Solicitud de envío de configuración completa del equipo (función 39)
+ 
+ 
+La PC envía una  orden para que la balanza responda un listado con su configuración completa.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + CRC.
+Respuesta:
+La Balanza envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Leyenda “Ton=”
+4 Letras
+Separador de campo
+Tono
+1 nro
+Tono de impresion:1 caracter
+Leyenda “;Gris=”
+6 letras
+Separador de campo
+Grises(S/N)
+1caracter
+Utilizacion de grises en las impresiones(1=Si, 0=No)
+Leyenda “;Pap=”
+5 letras
+Separador de campo
+Papel
+1 número
+Tipo de papel en uso(0=Ticket, 1=Etiqueta, 2=No imprime)
+Leyenda “;Apa=”
+5 Letras
+Separador de campo
+Reconocimiento de 
+papel
+1 Número
+Reconocimiento automático de papel(1=Si,0=No)
+Leyenda “;Vel=”
+5 letras 
+Separador de campo
+Velocidad
+1 nro
+Velocidad de las publicidades
+Leyenda “;Cpr=”
+5 letras
+Separador de campo
+Coma precio
+1 Número 
+Posición de la coma de precio
+Leyenda “;Cadm=”
+6 letras
+Separador de campo
+Clave administrador
+5  Números
+Clave del administrador general del equipo
+Leyenda “;Ccon=”
+6 letras
+Separador de campo
+Clave consulta
+5  Números
+Clave de consulta(clave heredada, no utilizada en este equipo)
+Leyenda ";Sinc="
+6 letras
+Separador de campo
+Sincro inicial
+1 número
+Espera inicial de sincronización de datos(1=SI,0=NO)
+Leyenda “;E_P=”
+5 Letras
+Separador de campo
+EAN13 Art Pesables
+12 
+caracteres
+Configuracion del código de barras EAN12 para ventas pesables
+Leyenda “;E_U=”
+5 Letras
+Separador de campo
+EAN13 Art 
+Unitarios
+12 
+caracteres
+Configuracion del código de barras EAN12 para ventas unitarios
+Leyenda “;E_S=”
+5 Letras
+Separador de campo
+EAN13 
+sumas
+12 
+caracteres
+Configuracion del código de barras EAN12 para sumas
+Leyenda “;Cim=”
+6 letras
+Separador de campo
+Copias de impresion
+1 nro
+Cantidad de copias en cada impresión
+
+===== PAGE 19 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       19
+Leyenda “;Pub=”
+5 letras
+Separador de campo
+Mensaje publicitario
+Max=100 
+caracteres
+Mensaje Publicitario
+Leyenda “;Enc1=”
+6 letras
+Separador de campo
+Encabezado 1
+18 
+caracteres
+Encabezado de impresión, linea 1
+Leyenda “;Enc2=”
+6 letras
+Separador de campo
+Encabezado 2
+34 
+caracteres
+Encabezado de impresión, linea 2
+Leyenda “;PeP=”
+5 letras
+Separador de campo
+Permisos Precios
+1 número
+Permisos de precios:
+0=solo lista 1
+1=Lista 1 y Lista 2
+3= Lista 1, Lista 2 y Precios manuales
+Leyenda “;Set=”
+5 letras
+Separador de campo
+Permite sumas en 
+etiquetas
+1Letra
+S=Si,N=No
+Leyenda “;Eti=”
+5 letras
+Separador de campo
+Imprime código EAN en 
+tickets
+1 letra
+S=Si, N=No
+• Solicitud de envío de un PLU extendido desde la balanza a la PC 
+ 
+ 
+(función 62):
+La PC solicita a la balanza que esta le envíe la totalidad de datos de un PLU.
+Solicitud:
+La PC envía una cadena de 7 bytes: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Número de PLU
+4 Números
+0001 a Máxima cantidad de PLUs del equipo(8000 por ejemplo)
+Respuesta:
+La Balanza envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Número de PLU
+4 números
+0001 a 8000
+Gestión
+1 Letra
+Identifica quien modifico este PLU:
+0: Gestionado balanza
+1:Gestionado PC
+Nombre de PLU
+18 letras
+Carácteres alfanuméricos aceptados por el equipo(según máscara del equipo)
+Precio de Lista 1
+6 Números
+De 000000 a 999999. No incluye coma.
+Precio de Lista 2
+6 Números
+De 000000 a 999999. No incluye coma.
+Código de PLU
+5 Número
+De 00001 a 99997
+Nro de Sector
+2 Números
+De 01 a 99
+Días de vencimiento
+4 números
+0000= sin vencimiento
+
+===== PAGE 20 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       20
+Tipo de venta
+1 Letra
+P=Pesable
+U=Unitario
+E=Escurrido
+C=Congelado
+Tara de PLU
+4 números
+Representa la tara del PLU en gramos y sin coma, solo tiene sentido en productos pesables, 
+en caso de no existir tara o de que el producto sea unitario, la tara será 0000.
+Porcentaje de agua
+4 números
+Porcentaje de agua multiplicado por 100(para los artículos Congelados, de 0,00 a 99,99)
+Tabla nutricional
+1 Letra
+Letra “S” o “N”, 1 carácter que informa si el producto posee Tabla Nutricional. S= Si, posee 
+tabla, N=No, no posee
+Tabla nutricional
+30 Letras
+Descripcion de la porción(en caso de poseer tabla nutricional)
+Tabla nutricional
+4 Números
+Kcalorias de porción
+Tabla nutricional
+4 Números
+Carbohidratos de porción(gramos)
+Tabla nutricional
+4 Números
+Proteinas en la porción(gramos)
+Tabla nutricional
+4 Números
+Grasas totales en la porción(gramos)
+Tabla nutricional
+4 Números
+Grasas saturadas en la porción(gramos)
+Tabla nutricional
+4 Números
+Grasas Trans en la porción(gramos)
+Tabla nutricional
+4 Números
+Fibra alimentaria en la porción(gramos)
+Tabla nutricional
+4 Números
+Sodio en la porción(miligramos)
+Origen
+4 Números
+Número que permite al equipo asociar el origen previamente cargado en la balanza con el 
+artículo
+Conservacion
+4 Números
+Número que permite al equipo asociar el mensaje de conservación previamente cargado en la 
+balanza con el artículo
+Receta
+4 Números
+Número que permite al equipo asociar el mensaje de la receta previamente cargado en la 
+balanza con el artículo
+Número de Lote
+12 número
+Numero de Lote.
+Configuración EAN 
+utilizada en el artículo
+1 número
+tipo de código de barras se utilizará:
+0=EAN General
+1=EAN del PLU
+2=NO utilizar EAN
+3=EAN suma
+Configuración EAN 
+12 Letras
+Permite personalizar el código de barras que se utilizará. Para información sobre los campos 
+posibles de incluir, consultar manual. EJ:20PPPPIIIIII
+Ingredientes Si/No
+1 Letra
+Informa si el producto posee descripcion de ingredientes/otros datos. S= posee ingredientes, 
+N= no posee ingredientes.
+Ingredientes/ otros 
+datos
+100 letras
+Solo en caso de que el campo anterior sea “S”
+ 
+• Envío de un PLU extendido desde la PC a la balanza (función 61):
+ 
+ 
+La PC envía un PLU a la balanza. Puede ser un PLU nuevo o una modificación de un PLU existente.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos 
+DATO
+BYTES
+DETALLE
+Número de PLU
+4 números
+0001 a 8000
+Nombre de PLU
+18 letras
+Carácteres alfanuméricos aceptados por el equipo(según máscara del equipo)
+
+===== PAGE 21 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       21
+Precio de Lista 1
+6 Números
+De 000000 a 999999. No incluye coma.
+Precio de Lista 2
+6 Números
+De 000000 a 999999. No incluye coma.
+Código de PLU
+5 Número
+De 00001 a 99997
+Nro de Sector
+2 Números
+De 01 a 99
+Días de vencimiento
+4 números
+0000= sin vencimiento
+Tipo de venta
+1 Letra
+P=Pesable
+U=Unitario
+E=Escurrido
+C=Congelado
+Tara de PLU
+4 números
+Representa la tara del PLU en gramos y sin coma, solo tiene sentido en productos pesables, 
+en caso de no existir tara o de que el producto sea unitario, la tara será 0000.
+Porcentaje de agua
+4 números
+Porcentaje de agua multiplicado por 100(para los articulos Escurridos)
+Tabla nutricional
+1 Letra
+Letra “S” o “N”, 1 carácter que informa si el producto posee Tabla Nutricional. S= Si, posee 
+tabla, N=No, no posee
+Tabla nutricional
+30 Letras
+Descripcion de la porción(en caso de poseer tabla nutricional)
+Tabla nutricional
+4 Números
+Kcalorias de porción
+Tabla nutricional
+4 Números
+Carbohidratos de porción(gramos)
+Tabla nutricional
+4 Números
+Proteinas en la porción(gramos)
+Tabla nutricional
+4 Números
+Grasas totales en la porción(gramos)
+Tabla nutricional
+4 Números
+Grasas saturadas en la porción(gramos)
+Tabla nutricional
+4 Números
+Grasas Trans en la porción(gramos)
+Tabla nutricional
+4 Números
+Fibra alimentaria en la porción(gramos)
+Tabla nutricional
+4 Números
+Sodio en la porción(miligramos)
+Origen
+4 Números
+Número que permite al equipo asociar el origen previamente cargado en la balanza con el 
+artículo
+Conservacion
+4 Números
+Número que permite al equipo asociar el mensaje de conservación previamente cargado en la 
+balanza con el artículo
+Receta
+4 Números
+Número que permite al equipo asociar el mensaje de la receta previamente cargado en la 
+balanza con el artículo
+Número de Lote
+12 número
+Numero de Lote.
+Configuración EAN 
+utilizada en el artículo
+1 número
+tipo de código de barras se utilizará:
+0=EAN General
+1=EAN del PLU
+2=NO utilizar EAN
+3=EAN suma
+Configuración EAN 
+12 Letras
+Permite personalizar el código de barras que se utilizará. Para información sobre los campos 
+posibles de incluir, consultar manual. EJ:20PPPPIIIIII
+Ingredientes Si/No
+1 Letra
+Informa si el producto posee descripcion de ingredientes/otros datos. S= posee ingredientes, 
+N= no posee ingredientes.
+Ingredientes/ otros 
+datos
+100 letras
+Solo en caso de que el campo anterior sea “S”
+ 
+• Envío de un origen desde la PC a la balanza (función 46):
+ 
+ 
+La PC envía un nuevo origen a la balanza. Puede ser un origen nuevo o una modificación de un  origen 
+existente.
+
+===== PAGE 22 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       22
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Id
+4 Números
+Indice en la tabla de Orígenes (0 a 300)
+Activo
+1 letra
+Caracter que permite activarlo o no. Puede ser:
+A:Activo,D:Inactivo
+Nombre
+20 letras
+Nombre del origen
+Informacion
+299 letras
+Informacion del origen
+• Envío de un origen desde la balanza a la PC (función 49):
+ 
+ 
+La PC solicita la información de un origen a la balanza. La balanza le responde con la información del 
+mismo.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Id
+4 Números
+Indice en la tabla de Orígenes (0 a 300)
+Respuesta:
+La balanza envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Id
+4 Números
+Indice en la tabla de Orígenes (0 a 300)
+Activo
+1 Letra
+Caracter que permite activarlo o no. Puede ser: 'A':activo,'D':inactivo
+Gestión
+1 Letra
+Identifica quien modificó este Origen: 0:Gestionado balanza;1:gestionado PC
+Nombre
+19 letras
+Nombre de origen
+Caracter Null(0x00)
+1 Letra
+Separador
+Información
+299
+Informacion del Origen
+Caracter Null(0x00)
+1 Letra
+Separador
+• Solicitud
+ 
+  de borrar 
+ 
+ Origen
+ 
+  (función 70)
+ 
+ 
+La PC envía una  orden para que la balanza borre un origen.
+
+===== PAGE 23 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       23
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + CRC.
+DATO
+BYTES
+DETALLE
+Id
+4 Números
+Indice en la tabla de Orígenes (0 a 300)
+Respuesta:
+La Balanza envía Ok;
+• Solicitud de envío del listado de todas los orígenes cargados (función 
+ 
+ 
+59)
+La PC envía una  orden para que la balanza responda un listado de todos los orígenes que posee 
+cargados, incluyendo un carácter de versión que permitirá a la PC conocer si el artículo se grabó desde la 
+PC o desde la balanza.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + CRC.
+Respuesta:
+La Balanza envía una cadena de datos consistente en: IP + Función + Datos + CRC
+•
+La cadena de Datos consistirá en un trama en formato ASCII que contendrá una secuencia de 
+recetas guardadas en la memoria, terminando con un carácter “F”:
+DATO
+BYTES
+DETALLE
+Id
+4 Números
+Indice en la tabla de Orígenes (0 a 300)
+Activo
+1 Letra
+Caracter que permite activarlo o no. Puede ser:
+'A':activo
+'D':inactivo
+Gestión
+1 Letra
+Identifica quien modifico este Origen:
+0:Gestionado balanza
+1:gestionado PC
+Caracter de Fin
+1 Letra
+'F'
+Nota: Los campos en amarillo pueden repetirse
+• Envío de un texto de conservación desde la PC a la balanza (función 
+ 
+ 
+47):
+La PC envía un nuevo texto de conservación a la balanza. Puede ser un texto de conservación nuevo o 
+una modificación de un  conservación existente.
+
+===== PAGE 24 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       24
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Id
+4 Números
+Indice en la tabla de Conservaciones (0 a 300)
+Activo
+1 Letra
+Caracter que permite activarlo o no. Puede ser:
+'A':activo
+'D':inactivo
+Nombre
+20 Letra
+Nombre de la conservación
+Informacion
+300 Letras
+Informacion de la conservación
+Respuesta:
+La Balanza envía Ok;
+• Envío de un texto de conservación  desde la balanza a la PC (función 
+ 
+ 
+50):
+La PC solicita el texto de conservación a la balanza. La balanza le responde con la información del 
+mismo.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Id
+4 Números
+Indice en la tabla de Conservaciones (0 a 300)
+Respuesta:
+La balanza envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Id
+4 Números
+Indice en la tabla de  Conservación (0 a 300)
+Activo
+1 Letra
+Caracter que permite activarlo o no. Puede ser: 'A':activo,'D':inactivo
+Gestión
+1 Letra
+Identifica quien modificó esta Conservación: 0:Gestionado balanza;1:gestionado PC
+Nombre
+19 letras
+Nombre del texto de conservación
+Caracter Null(0x00)
+1 Letra
+Separador
+Información
+299
+Texto de conservación
+Caracter Null(0x00)
+1 Letra
+Separador
+
+===== PAGE 25 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       25
+• Borrado de un texto de conservación  desde la balanza a la PC 
+ 
+ 
+(función 71):
+La PC solicita borrar un texto de conservación a la balanza. 
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Id
+4 Números
+Indice en la tabla de Conservaciones (0 a 300)
+Respuesta:
+La balanza responde con ok.
+• Solicitud de envío del listado de todas los textos de conservaciones 
+ 
+ 
+cargadas (función 60)
+La PC envía una  orden para que la balanza responda un listado de todos los textos que posee cargados, 
+incluyendo un carácter de versión que permitirá a la PC conocer si el artículo se grabó desde la PC o desde 
+la balanza.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + CRC.
+Respuesta:
+La Balanza envía una cadena de datos consistente en: IP + Función + Datos + CRC
+•
+La cadena de Datos consistirá en un trama en formato ASCII que contendrá una secuencia de 
+recetas guardadas en la memoria, terminando con un carácter “F”:
+DATO
+BYTES
+DETALLE
+Id
+4 Números
+Indice en la tabla de Conservaciones (0 a 300)
+Activo
+1 Letra
+Caracter que permite activarlo o no. Puede ser:
+'A':activo
+'D':inactivo
+Gestión
+1 Letra
+Identifica quien modifico esta informacion:
+0:Gestionado balanza
+1:gestionado PC
+Caracter de Fin
+1 Letra
+'F'
+Nota: Los campos en amarillo pueden repetirse
+• Envío de un texto de Receta de ingredientes desde la PC a la balanza 
+ 
+ 
+(función 45):
+La PC envía un nuevo texto de receta a la balanza. Puede ser un texto de receta nueva o una 
+
+===== PAGE 26 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       26
+modificación de un  receta existente.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Id
+4 Números
+Indice en la tabla de 
+listas de ingredientes(o recetas). De 0 a 300
+Activo
+1 Letra
+Caracter que permite activarlo o no. Puede ser:
+'A':activo
+'D':inactivo
+Nombre
+20 Letra
+Nombre de la lista de ingredientes
+Informacion
+300 Letras
+Informacion de la Lista de ingredientes
+Respuesta:
+La balanza responde con ok.
+• Envío de un texto de receta de ingredientes desde la balanza a la PC 
+ 
+ 
+(función 56):
+La PC solicita el texto de conservación a la receta. La balanza le responde con la información del mismo.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Id
+4 Números
+Indice en la tabla de 
+listas de ingredientes(o recetas). De 0 a 300
+Respuesta:
+La balanza envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Id
+4 Números
+Indice en la tabla de  Recetas(0 a 300)
+Activo
+1 Letra
+Caracter que permite activarlo o no. Puede ser: 'A':activo,'D':inactivo
+Gestión
+1 Letra
+Identifica quien modificó esta Receta: 0:Gestionado balanza;1:gestionado PC
+Nombre
+19 letras
+Nombre del texto de  receta de ingredientes
+Caracter Null(0x00)
+1 Letra
+Separador
+Información
+299
+Texto de receta de ingredientes
+Caracter Null(0x00)
+1 Letra
+Separador
+
+===== PAGE 27 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       27
+Respuesta:
+La balanza responde con ok.
+• Solicitud de envío del listado de todas las recetas de ingredientes 
+ 
+ 
+cargadas (función 55)
+La PC envía una  orden para que la balanza responda un listado de todos las recetas de ingredientes que 
+posee cargadas, incluyendo un carácter de versión que permitirá a la PC conocer si el artículo se grabó 
+desde la PC o desde la balanza.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + CRC.
+Respuesta:
+La Balanza envía una cadena de datos consistente en: IP + Función + Datos + CRC
+•
+La cadena de Datos consistirá en un trama en formato ASCII que contendrá una secuencia de 
+recetas guardadas en la memoria, terminando con un carácter “F”:
+DATO
+BYTES
+DETALLE
+Id
+4 Números
+Indice en la tabla de  Recetas (0 a 300)
+Activo
+1 Letra
+Caracter que permite activarlo o no. Puede ser:
+'A':activo
+'D':inactivo
+Gestión
+1 Letra
+Identifica quien modifico esta informacion:
+0:Gestionado balanza
+1:gestionado PC
+Caracter de Fin
+1 Letra
+'F'
+Nota: Los campos en amarillo pueden repetirse
+• Solicitud
+ 
+  de borrar 
+ 
+ receta
+ 
+  (función 69)
+ 
+ 
+La PC envía una  orden para que la balanza borre una receta.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + CRC.
+DATO
+BYTES
+DETALLE
+Id
+4 Números
+Indice en la tabla de 
+listas de ingredientes(o recetas). De 0 a 300
+Respuesta:
+La Balanza envía Ok;
+
+===== PAGE 28 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       28
+• Envío de la moneda desde la PC a la balanza (función 64):
+ 
+ 
+La PC setea la moneda y el  punto decimal a la balanza. La balanza le responde con la información del 
+mismo.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Coma
+1 Número
+Coma en el precio:
+0=formato 6:0
+2=formato 4:2
+Moneda
+3 letras
+String con la moneda. Ej:”AR$”,”u$s”
+Respuesta:
+La balanza responde OK.
+• Envío de la moneda actual desde la balanza a la PC (función 63):
+ 
+ 
+La PC solicita la moneda y el punto decimal a la balanza. La balanza le responde con la información del 
+mismo.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC
+Respuesta:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Coma
+1 Número
+Coma en el precio:
+0=formato 6:0
+2=formato 4:2
+Moneda
+3 letras
+String con la moneda. Ej:”AR$”,”u$s”
+• Envío de un usuario desde la PC a la balanza (función 65):
+ 
+ 
+La PC envía un usuario a la balanza. Puede ser un usuario nuevo o una modificación de un usuario 
+existente.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC
+
+===== PAGE 29 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       29
+DATO
+BYTES
+DETALLE
+Número de usuario
+2 Números
+01 a 20
+Activo
+1 letra
+'A':activo,'D':desactivado
+Nombre de usuario
+19 letras
+Nombre del usuario
+Permisos Administrar
+1 Letra
+'A': administra; otra: no administra
+Permisos Venta
+1 Letra
+'V': vende; otra: no vende
+Permisos Consulta
+1 Letra
+'C': consulta; otra: no consulta
+Clave
+4 números
+0001 a 9999
+Respuesta:
+La balanza responde OK.
+• Consulta de un usuario desde la PC a la balanza (función 66):
+ 
+ 
+La PC solicita información de un usuario a la balanza. 
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Id
+3 Número
+Nro de Usuario(000 a 020)
+Respuesta:
+La PC envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Número de usuario
+4 Números
+0001 a 0020
+Gestion
+1 Numero
+0: gestion Balanza, 1:gestion PC
+Activo
+1 letra
+'A':activo,'D':desactivado
+Nombre de usuario
+19 letras
+Nombre del usuario
+Permisos Administrar
+1 Letra
+'A': administra; otra: no administra
+Permisos Venta
+1 Letra
+'V': vende; otra: no vende
+Permisos Consulta
+1 Letra
+'C': consulta; otra: no consulta
+Clave
+4 números
+0001 a 9999
+• Solicitud de envío del listado de todos los usuarios cargados (función
+ 
+  
+67)
+La PC envía una  orden para que la balanza responda un listado de los números de usuario que posee 
+cargados, incluyendo un carácter de gestión que permitirá a la PC conocer si el usuario se grabó desde la 
+PC o desde la balanza.
+
+===== PAGE 30 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       30
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + CRC.
+Respuesta:
+La Balanza envía una cadena de datos consistente en: IP + Función + Datos + CRC
+•
+La cadena de Datos consistirá en un trama en formato ASCII que contendrá una secuencia de 
+recetas guardadas en la memoria, terminando con un carácter “F”:
+DATO
+BYTES
+DETALLE
+Número de usuario
+4 Números
+0001 a 0020
+Activo
+1 letra
+'A':activo,'D':desactivado
+Gestion
+1 Numero
+0: gestion Balanza, 1:gestion PC
+Caracter de Fin
+1 letra
+'F'
+Nota: Los campos en amarillo pueden repetirse
+• Solicitud
+ 
+  de borrar 
+ 
+ usuario
+ 
+  cargado (función 68)
+ 
+ 
+La PC envía una  orden para que la balanza borre un usuario.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + CRC.
+DATO
+BYTES
+DETALLE
+Id
+2 Número
+Nro de Usuario(00 a 20)
+Respuesta:
+La Balanza envía una cadena de datos consistente en: OK.
+Funciones especificas para la gestión de etiquetas 
+configurables.
+El equipo permite configurar los formatos de etiqueta, utilizando objetos gráficos. 
+• Envío de un objeto gráfico desde la pc a la balanza (función 87)
+ 
+ 
+La PC envía un objeto a colocar en la etiqueta. Esta función no tiene en cuenta el CRC.
+
+===== PAGE 31 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       31
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función 
+DATO
+BYTES
+DETALLE
+Formato
+2 Números
+Nro de  formato de etiqueta que contiene el objeto(de 0 a 9) ASCII
+Nro de objeto
+2 Números
+Nro de Objeto en ASCII
+Activo
+1 letra 
+Indica si el objeto está activo en la etiqueta:
+'A'=SI
+'D'=NO
+Tipo de objeto
+2 Número
+Tipo de objeto recibido:
+0: Fin de etiqueta
+1:Texto
+2:Tabla nutricional
+3: Código de barra
+4:Rectángulo
+5:No utilizado 
+6:No utilizado 
+7:Form Feed
+Objeto variable/fijo
+1 Letra
+Si el objeto es un texto, permite fijar si es un texto variable o fijo:
+1:Texto variable
+2:Texto Fijo
+Letra ancho
+1 número
+En caso de ser Texto: ancho de letra
+Letra Formato
+1 número
+En caso de ser Texto: tipo de la letra
+Punto inicio x
+4 números
+Coordenada x de inicio de objeto
+Punto inicio y
+4 números
+Coordenada y de inicio de objeto
+Ancho del objeto
+4 números
+Alto del objeto
+4 números
+Alineación del objeto
+1 Letra
+Forma de alinear el objeto:
+'R':derecha
+'L':izquierda
+'C':centro
+Color de objeto
+1 Letra
+Color del objeto
+'B':negro
+'W':blanco
+'G':Gris
+Dato
+400 Letras
+Solo util en los textos
+Respuesta:
+La Balanza contesta ok.
+• Lectura de un objeto gráfico desde la balanza (función 82)
+ 
+ 
+La PC envía un objeto a colocar en la etiqueta.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + CRC.
+DATO
+BYTES
+DETALLE
+Nro Formato
+2 Número
+Numero del formato  guardado en la balanza(0 a 9)
+
+===== PAGE 32 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       32
+Nro de objeto
+3 Número
+Número del objeto dentro del formato guardado en la balanza(0 a 20)
+Respuesta:
+La Balanza envía una cadena de datos consistente en: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Formato
+2 Números
+Nro de  formato de etiqueta que contiene el objeto(de 0 a 9) ASCII
+Nro de objeto
+2 Números
+Nro de Objeto en ASCII
+Activo
+1 letra 
+Indica si el objeto está activo en la etiqueta:
+'A'=SI
+'D'=NO
+Tipo de objeto
+2 Número
+Tipo de objeto recibido:
+0: Fin de etiqueta
+1:Texto
+2:Tabla nutricional
+3: Código de barra
+4:Rectángulo
+5:No utilizado 
+6:No utilizado 
+7:Form Feed
+Objeto variable/fijo
+1 Letra
+Si el objeto es un texto, permite fijar si es un texto variable o fijo:
+1:Texto variable
+2:Texto Fijo
+Letra ancho
+1 número
+En caso de ser Texto: ancho de letra
+Letra Formato
+1 número
+En caso de ser Texto: tipo de la letra
+Punto inicio x
+4 números
+Coordenada x de inicio de objeto
+Punto inicio y
+4 números
+Coordenada y de inicio de objeto
+Ancho del objeto
+4 números
+Alto del objeto
+4 números
+Alineación del objeto
+1 Letra
+Forma de alinear el objeto:
+'R':derecha
+'L':izquierda
+'C':centro
+Color de objeto
+1 Letra
+Color del objeto
+'B':negro
+'W':blanco
+'G':Gris
+Dato
+400 letras 
+max
+Dato variable contenido en el objeto finalizado con un carácter 0x00.
+
+===== PAGE 33 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       33
+Funciones especificas para la gestión de las ventas.
+• Reporte de ventas(función 72)
+ 
+ 
+La PC consulta el listado de reportes en cierto periodo de tiempo.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + CRC.
+DATO
+BYTES
+DETALLE
+Dia Fecha inicio
+2 Números
+Día de inicio de reporte(ascii)
+Mes Fecha inicio
+2 Números
+Mes de inicio de reporte(ascii)
+Año Fecha inicio
+2 Números
+Año de inicio de reporte(ascii)
+Dia Fecha inicio
+2 Números
+Día de fin de reporte(ascii)
+Mes Fecha inicio
+2 Números
+Mes de fin de reporte(ascii)
+Año Fecha inicio
+2 Números
+Año de fin de reporte(ascii)
+Respuesta:
+La Balanza envía una cadena de datos consistente en: IP + Función + Datos + CRC
+Los datos estan separados por el símbolo ^(0x5E). La fecha utiliza separadores '/' y la hora ':'.
+DATO
+BYTES
+DETALLE
+Ticket Id
+9 Números
+Nro de ticket
+Separador ^
+1 letra
+separador
+Fecha de venta
+8 
+caracteres
+Fecha de la venta en formato ascii(“03/05/15”)
+Separador ^
+1 letra
+separador
+Hora de venta
+8 
+caracteres
+Hora de la venta en formato ascii(“15:03:09”)
+Separador ^
+1 letra
+separador
+Nro vendedor
+2 Números
+Nro de vendedor
+Separador ^
+1 letra
+separador
+PLU
+4 Números
+Nro de PLU
+
+===== PAGE 34 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       34
+Separador ^
+1 letra
+separador
+Sector
+2 Números
+Nro de Sector
+Separador ^
+1 letra
+separador
+Unidades
+4 nros
+Unidades(Solo en venta de unitarios)
+Separador ^
+1 letra
+separador
+Gramos
+5
+Peso en gramos de la venta(solo en venta de pesables/Congelados)
+Separador ^
+1 letra
+separador
+Drenado
+5
+Peso en gramos de escurrido(solo en ventas de escurridos)
+Separador ^
+1 letra
+separador
+Importe
+12 numeros Importe de la venta multiplicado por 100(para introducir 2 decimales)
+Letra 'F'
+1 Letra
+Indicador de fin
+Nota: Los campos en amarillo pueden repetirse
+• Solicitud de cierre de ventas (función 32)
+ 
+ 
+La PC envía una  orden para que la balanza genere el cierre de ventas acumuladas de todos los PLU. Es 
+importante destacar que esta función puede demorar unos instantes. Se emitirá un carácter que dará aviso 
+de que se recibió la orden y se está procesando. Al final, se dará aviso de la conclusión de la orden.
+Solicitud:
+La PC envía una cadena de datos consistente en: IP + Función + CRC.
+Respuesta:
+La Balanza envía una cadena de datos consistente en: IP + Función + Datos + CRC
+Los cadena de Datos consistirá solo en una letra “I” que indica el inicio de la actividad. Al finalizarla, 
+enviará el ACK de confirmación de ejecución de la orden.
+• Solicitud de Escritura de códigos genéricos (función 74):
+ 
+ 
+Permite Asignarlo un codigo especifico a el PLU Generico Unitario y PLU Generico Pesable.
+Solicitud:
+La PC envía una cadena de 3 bytes: IP + Función + CRC
+DATO
+BYTES
+DETALLE
+Cod. Gen Pesable
+5 Número
+Código Generico Pesable(00000 a 99998)
+Cod. Gen Unitario
+5 Número
+Código Generico Unitario (00000 a 99998)
+
+===== PAGE 35 =====
+ANEXO II – Protocolo de comunicación CUORA Max
+                                                                       35
+Respuesta:
+La Balanza envía una cadena de 32 bytes: IP + Función + Datos + CRC
+Al finalizar la instrucción, enviará el ACK de confirmación de ejecución de la orden.
+• Solicitud de Lectura de códigos genéricos (función 73):
+ 
+ 
+Permite Asignarlo un código especifico a el PLU Genérico Unitario y PLU Genérico Pesable.
+Solicitud:
+La PC envía una cadena de 3 bytes: IP + Función + CRC
+Respuesta:
+La Balanza envía una cadena de 32 bytes: IP + Función + Datos + CRC
+DATO
+BYTES
+DETALLE
+Cod. Gen Pesable
+5 Número
+Código Generico Pesable(00000 a 99998)
+Cod. Gen Unitario
+5 Número
+Código Generico Unitario (00000 a 99998)
